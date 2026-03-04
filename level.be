@@ -37,7 +37,7 @@ do
     var cal_z
     var calibrated
     var tilt_callback
-    var timerID
+    #var monitor_activated
 
     def init(wire, addr)
       # wire: tasmota wire_scan result (already validated)
@@ -47,12 +47,10 @@ do
       self.cal_y = 0.0
       self.cal_z = 1.0
       self.calibrated = false
-      self.timerID = tasmota.micros()
-      
       self.w = wire
       if addr == nil addr = MPU_ADDR end
       self.addr = addr
-      
+      #self.monitor_activated = false
       self._configure()
       
       # Try to load saved calibration
@@ -234,7 +232,7 @@ do
 
     def tilt_monitor(callback, interval)
       #self.stop_tilt_monitor()
-      tasmota.remove_timer(self.timerID)
+      tasmota.remove_timer(self)
       if interval == nil interval = 100 end
       if type(interval) != 'int' || interval<=0
         print('Wrong value for interval, must be ms')
@@ -253,24 +251,23 @@ do
     end
 
     def stop_tilt_monitor()
-      self.tilt_callback = nil
-      tasmota.remove_timer(self.timerID)
+      if self.tilt_callback
+        self.tilt_callback = nil
+        print('Tilt monitor is stopped')
+      end
+      tasmota.remove_timer(self)
     end
 
     def _tilt()
       var t = self.tilt()
       if t>10
-        print("Tilt callback triggered")
-        self.tilt_callback(t)
-        #self.stop_tilt_monitor()
+        print("Tilt callback triggered (monitor stopped)")
+        var cb = self.tilt_callback
+        self.tilt_callback = nil
+        cb(t)
       else
-        tasmota.set_timer(100, /->self._tilt(), self.timerID)
+        tasmota.set_timer(100, /->self._tilt(), self)
       end
-    end
-
-    def cleanup()
-      tasmota.remove_timer(self.timerID)
-      self.tilt_callback = nil
     end
 
     def deinit()

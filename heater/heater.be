@@ -1,12 +1,20 @@
-# Heater Safety Controller Example
+# Heater Safety Controller
 # Uses tasmota-level driver for tilt protection
-# Arduino-style: single loop() called every 100ms
-var heater
+
+#var heater
 
 while true
   import strict
   import gpio
   import level
+
+  # it will performed only on "load('level')"
+  # when developing the heater code
+  if global.heater!=nil
+    global.heater.cleanup()
+    global.heater=nil
+    tasmota.gc()
+  end
 
     class PinController
     #
@@ -75,13 +83,17 @@ while true
       gpio.digital_write(self.pin, self.ON)
       tasmota.set_timer(self.t1, /-> self._blink_off(), self)
     end
-    
-    def deinit()
-      # see the garbage collector in action
-      print(self, '.deinit()')
+
+    def cleanup()
+      self.stop()
     end
     
-  end
+    def deinit()
+      #self.cleanup()
+      # we see the garbage collector in action
+      print(self, '.deinit()')
+    end
+  end # end of PinContorller
 
   class HeaterController
     var heater_on # true/false
@@ -120,9 +132,12 @@ while true
       tasmota.remove_timer(self)
       self.relay.on()
       self.led.on()
-      self.heater_on = true
       tasmota.set_timer(20000, /-> self.stop() ,self)
       level.tilt_monitor(/-> self._tilt_trigger())
+      if !self.heater_on
+        print('Heater is started')
+      end
+      self.heater_on = true
     end
     
     def _tilt_trigger() # internal
@@ -141,6 +156,7 @@ while true
 
     def cleanup()
       self.stop()
+      print("Removing button rule")
       tasmota.remove_rule(self.trigger)
     end
     
@@ -173,7 +189,9 @@ while true
   var relay = PinController(relay_pin)
   var led = PinController(led_pin)
 
-  # Create global instance
-  heater = HeaterController(relay, led)
-  return heater 
+  # Create global instance when used with load('level')
+  global.heater = HeaterController(relay, led)
+  # when used with 'import level'
+  # import is performed only once (ensured by the berry intrepreter)
+  return global.heater 
 end

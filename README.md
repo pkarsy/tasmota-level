@@ -11,24 +11,25 @@ Tasmota-Level provides a complete leveling solution that runs entirely within Ta
 
 - **No recompilation required**: Install and configure without rebuilding Tasmota firmware
 - **Built-in calibration**: Calibrate the module to your specific mounting orientation
-- **Auto-save calibration**: Calibration is saved to flash and restored on boot
+- **Auto-save calibration**: Calibration is saved to flash and restored on load
 - **Simple API**: Just `level.tilt()` to get the tilt angle in degrees
 - **Survives firmware updates**: Berry scripts persist across Tasmota updates
 
 ## Hardware Requirements
 
-- ESP32-based module running Tasmota with Berry support
+- ESP32-based module running Tasmota
 - MPU6050 I2C accelerometer/gyroscope sensor
 - An enclosure or device where the ESP32 and MPU6050 are mounted
 
 ## Wiring
+Tasmota web interface -> Configurationn -> Module
 
 | MPU6050 | ESP32 |
 |---------|-------|
-| VCC     | 3.3V  |
-| GND     | GND   |
-| SCL     | GPIO22 (or your configured I2C SCL pin) |
-| SDA     | GPIO21 (or your configured I2C SDA pin) |
+| VCC     | 3.3V  or Output Hi |
+| GND     | GND or Output Lo  |
+| SCL     | I2C SCL |
+| SDA     | I2C SDA |
 
 ## Installation & Setup
 
@@ -119,36 +120,13 @@ The implementation uses **vector projection**:
 
 This gives the total tilt from vertical regardless of which direction you tilt.
 
-## Project Structure
+## Heater Safety Controller
 
-```
-tasmota-level/
-├── README.md           # This file
-├── level.be            # Main Berry driver
-├── LICENSE             # MIT License
-├── heater_example/     # Example application
-│   ├── heater.be       # Heater safety controller
-│   └── README.md       # Heater example docs
-└── .gitignore
-```
-
-## Example Application: Heater Safety Controller
-
-See `heater_example/` for a complete working example that uses this driver for heater safety:
+See `heater/` for a complete working example that uses this driver for heater safety:
 
 - Prevents heater from starting if tilted >10°
 - Emergency stop if heater tilts while running
 - 1-hour auto-timeout
-- LED feedback for tilt faults
-
-## Status
-
-- [x] Basic driver working
-- [x] Calibration with flash persistence
-- [x] Tilt calculation verified
-- [x] **Tested on my daughter's heater!** 🔥📐
-- [ ] Heater application debugging
-- [ ] v1.0 release
 
 > **"Tested on my daughter's heater"** - This driver is proven in real-world use for heater safety.  
 > If it can satisfy a difficult teenager, it can handle your project too! 🔥😤

@@ -25,9 +25,8 @@ do
 
   var MSG = 'LEVEL: '
   var MPU_ADDR = 0x68
-  var PERSIST_KEY = 'calibration_vector'  # Key for calibration data in flash
 
-  class MPU6050Level
+  class LEVEL
     var w              # Wire/I2C object (passed in, not scanned)
     var addr           # I2C address
     
@@ -36,8 +35,11 @@ do
     var cal_y
     var cal_z
     var calibrated
+    # Tilt monitor
     var tilt_callback
-    #var monitor_activated
+    var tilt_max_angle # in degrees
+    var tilt_interval
+    static PERSIST_KEY = 'calibration'
 
     def init(wire, addr)
       # wire: tasmota wire_scan result (already validated)
@@ -69,7 +71,7 @@ do
 
     # Internal: load calibration from flash
     def _load_calibration()
-      var saved = persist.find(PERSIST_KEY)
+      var saved = persist.find(LEVEL.PERSIST_KEY)
       if saved == nil
         print(MSG + 'No saved calibration found. Run: level.calibrate()')
         return
@@ -80,7 +82,8 @@ do
         print(MSG + 'Loaded calibration from flash')
       else
         # Invalid data in flash, remove it
-        persist.remove(PERSIST_KEY)
+        persist.remove(LEVEL.PERSIST_KEY)
+        print('The flash data are ivalid. Run level.calibrate() again')
       end
     end
 
@@ -91,7 +94,7 @@ do
       end
       
       var cal = [self.cal_x, self.cal_y, self.cal_z]
-      persist.setmember(PERSIST_KEY, cal)
+      persist.setmember(LEVEL.PERSIST_KEY, cal)
       persist.save()
       print(MSG + 'Calibration saved to flash')
     end
@@ -238,9 +241,9 @@ do
         print('Wrong value for interval, must be ms')
         return
       end
-      if callback == nil
-        callback = /t-> print("tilt =",t)
-      end
+      #if callback == nil
+      #  callback = /t-> print("tilt =",t)
+      #end
       if type(callback)!='function'
         print('Callback must be a function')
         return
@@ -261,7 +264,7 @@ do
     def _tilt()
       var t = self.tilt()
       if t>10
-        print("Tilt callback triggered (monitor stopped)")
+        print("Tilt detected") # monitor is stopped, it needs to reenable
         var cb = self.tilt_callback
         self.tilt_callback = nil
         cb(t)
@@ -290,7 +293,7 @@ do
     print(MSG + 'MPU6050 found at 0x' .. string.hex(MPU_ADDR))
     # Create global "level" instance
     #global.
-    level = MPU6050Level(wire, MPU_ADDR)
+    level = LEVEL(wire, MPU_ADDR)
     return level
   end
 end

@@ -124,7 +124,6 @@ while true
         print('Heater is stopped')
       end
       self.heater_on = false
-      print()
     end
     
     # Start heater

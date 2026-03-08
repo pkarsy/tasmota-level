@@ -16,7 +16,7 @@ if global.level != nil
   tasmota.gc() # clean the GC bebore proceed # y
 end
 
-var level
+var level = nil
 do
   import strict
   import math

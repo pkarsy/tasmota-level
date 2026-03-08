@@ -10,13 +10,14 @@ while true
 
   # it will performed only on "load('level')"
   # when developing the heater code
-  if global.heater!=nil
-    global.heater.cleanup()
-    global.heater=nil
-    tasmota.gc()
-  end
+  try
+    if global.heater!=nil
+      global.heater.cleanup()
+      global.heater=nil
+      tasmota.gc()
+    end
 
-    class PinController
+  class PinController
     #
     var pin # The ESP32 pin the LED is connected
     var t1, t2 # ON,OFF time
@@ -183,6 +184,10 @@ while true
   if gpio.pin(gpio.KEY1,0)<0
     print('Set the Button-0 pin in config')
     break
+  end
+
+  if !level.calibrated
+    print('Calibrate the level driver with level.calibrate() first')
   end
 
   var relay = PinController(relay_pin)

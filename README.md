@@ -1,20 +1,17 @@
 # Tasmota-Level
 
-Under CONSTRUCTION right now
+Under CONSTRUCTION
 
-A self-leveling/bubble level driver for Tasmota using Berry scripting and the MPU6050 IMU sensor. Hoever the goal is to include more low cost IMU chips. There is no need to install Tasmota's native MPU6050 driver (which requires re-compiling the Tasmota system).
+A self-leveling/bubble level driver for Tasmota using Berry scripting and the MPU6050 IMU sensor(more are coming). There is no need to install Tasmota's native MPU6050 driver (which requires re-compiling the Tasmota system).
 
 > **⚠️ WORK IN PROGRESS ⚠️**  
 This driver is currently being tested in real-world applications. The API may change as issues are discovered. Use with caution until v1.0 is released.
 
 ## Overview
 
-Tasmota-Level provides a complete leveling solution that runs entirely within Tasmota's Berry scripting environment:
-
 - **No recompilation required**: Install and configure without rebuilding Tasmota firmware. This is important as the support for MPU6050 and other IMUs is not currently compiled in stock tasmota builds.
-- **Built-in calibration**: Calibrate the module to your specific mounting orientation
-- **Auto-save calibration**: Calibration is saved to flash and restored on load
-- **Simple API**: Just `level.tilt()` to get the tilt angle in degrees
+- **Built-in calibration**: Calibrate the module(saved automatically to flash) to your specific mounting orientation. This way the hardware installation is significantly easier than bubble tilt sensors. You can just mount the module to any orientation is easy at installation.
+- **Simple API**
 - **Survives firmware updates**: Berry scripts persist across Tasmota updates
 
 ## Hardware Requirements
@@ -24,7 +21,7 @@ Tasmota-Level provides a complete leveling solution that runs entirely within Ta
 - An enclosure or device where the ESP32 and MPU6050 are mounted
 
 ## Warning for fake parts
-MPU6050 is EOL for a long time and most breakout boards on online stores, have fake or recycled parts. The other parts in can have similar problems(in a lesser degree however) so purchase through authorized distributors is a good startegy.
+MPU6050 is EOL (for a long time) and most breakout boards on online stores, have fake or recycled parts. The other parts can have similar problems(in a lesser degree however) so purchase through authorized distributors is a good startegy.
 
 ## Wiring
 
@@ -35,17 +32,20 @@ MPU6050 is EOL for a long time and most breakout boards on online stores, have f
 | SCL     | I2C SCL |
 | SDA     | I2C SDA |
 
+It is very covenient to select pins in ESP that are nearby(Vcc-Gnd-Scl-Sda)
+
 ## Installation & Setup
 
 ### Step 1: Initial Setup (Interactive)
 
 **First time only** - Tasnmota Web Interface -> Tools -> BerryConsole :
-
-1. > tasmota.urlfetch('https://raw.githubusercontent.com/pkarsy/tasmota-level/refs/heads/main/level.be')
-
+   ```sh
+   tasmota.urlfetch('https://raw.githubusercontent.com/pkarsy/tasmota-level/refs/heads/main/level.be')
+   ```
 2. **Load the driver interactively** (berry console):
-   > import level
-
+   ```sh
+   import level
+   ```
    If MPU6050 is found, you'll see:
    ```
    LEVEL: MPU6050 found at 0x68
@@ -56,26 +56,29 @@ MPU6050 is EOL for a long time and most breakout boards on online stores, have f
    The IMU must be well mounted inside the box, otherwise the calibration will be wrong.
 
 5. **Calibrate**:
-   
-   > level.calibrate()
+   ```sh
+   level.calibrate()
+   ```
    
    This measures the gravity vector and saves it to flash.
 
-   Note that if the internal orientation of the IMU changes, you have to recalibrate the device. 
+   Note that if the internal orientation of the IMU changes due to hardware modifications, you have to recalibrate the device. 
 
 6. **Test the readings**:
-   
-   > level.tilt()
-   
+   ```sh
+   level.tilt()
+   ```
    Should show 0 up to 1° when level, and increase as you tilt the device.
 
 ### Step 2: Auto-load on Boot
 Having the driver loaded at boot and available as global module helps to see possible probles early and to recalibrate the device if needed. In
 `autoexec.be`:
 
-> import level  
+```sh
+import level  
+```
 
-**At this point you must have the module calibrated otherwise it wont work, obviously.**
+**From now on we assume the module is calibrated, otherwise it wont work, obviously.**
 
 On boot, the driver will:
 - Scan for MPU6050
@@ -101,7 +104,7 @@ if tilt != nil
   print("Tilt: " + str(tilt) + " degrees")
 end
 
-# Monitor the level and call a function
+# Monitor the tilt and call a function when tilt()>10deg
 # when tilts exceeds 10deg
 level.tilt_monitor( myfunction )
 level.tilt_monitor( /->my.method() )
@@ -113,7 +116,7 @@ level.tilt_monitor( /->my.method() )
 
 See `heater/` for a complete working example that uses this driver for heater safety:
 
-- Stops the heater/preventsstarting if tilted >10°
+- Stops the heater/prevents starting if tilted >10°
 - 1-hour auto-timeout
 - on/off pushbutton
 

@@ -37,11 +37,18 @@ for easier cabling you can simulate VCC and GND with Any GPIO (Tasmota config-mo
 2. **Calibrate the level sensor**:
    level.calibrate()
 
+3. Download the application to the ESP32 flash
+
+   berry Console
+```sh
+tasmota.urlfetch('https://raw.githubusercontent.com/pkarsy/tasmota-level/refs/heads/main/heater/heater.be')
+```
+
 3. **Upload `heater.be`** and add to `autoexec.be`:
-   ```berry
+   ```sh
    import level    # Load level driver
    import heater   # Load heater safety controller
-
+```
 ## How It Works
 
 ### Starting the Heater
@@ -101,7 +108,7 @@ var BLINK_INTERVAL = 200   # Blink speed in ms (default: 200)
 - **Always have backup safety mechanisms** - Mechanical thermostats, thermal fuses, etc.
 - **Test thoroughly** before relying on this system
 - **Never leave heaters unattended** - Software can fail, sensors can break
-- **The 1-hour timeout is NOT a substitute** for proper thermal protection
+- **The 1-hour timeout is NOT a substitute** for proper thermal protection/monitoring
 
 **By using this code, you accept full responsibility for any damage, injury, or fire that may occur.**
 

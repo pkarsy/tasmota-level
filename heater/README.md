@@ -12,9 +12,9 @@ A complete working example using the tasmota-level driver for heater safety.
 
 ## Hardware Requirements
 
-- ESP32 with Tasmota and Berry support
-- MPU6050 I2C sensor (for tilt detection)
-- Push button (connected to Switch1)
+- ESP32x with Tasmota and Berry support
+- MPU6050 I2C sensor (for tilt detection) Soon all IMU chips
+- Push button (connected to Button-1)
 - LED (built-in or external)
 - Relay module (for heater control)
 
@@ -22,35 +22,34 @@ A complete working example using the tasmota-level driver for heater safety.
 
 | Component | ESP32 Pin |
 |-----------|-----------|
-| MPU6050 SCL | GPIO22 |
-| MPU6050 SDA | GPIO21 |
-| Button | GPIO (configure as Switch1 in Tasmota) |
-| Relay | GPIO (configure as Relay1 in Tasmota) |
+| MPU6050 or other IMU | see the 'level' driver pins |
+| Button | configure as Button-1 in Tasmota |
+| Relay/SSR | Interrupt-1 in Tasmota |
+| Led | Interrupt-2 in Tasmota |
+
+for easier cabling you can simulate VCC and GND with Any GPIO (Tasmota config-module-> Output Hi/Lo)
 
 ## Installation
 
-1. **Upload and load the level driver first**:
-   ```
-   br load('level')
-   ```
+1. **load and calibrate the level driver first**:
+  see above 
 
 2. **Calibrate the level sensor**:
-   ```
-   br level.calibrate()
-   ```
+   level.calibrate()
 
 3. **Upload `heater.be`** and add to `autoexec.be`:
    ```berry
-   load('level')    # Load level driver
-   load('heater')   # Load heater safety controller
-   ```
+   import level    # Load level driver
+   import heater   # Load heater safety controller
 
 ## How It Works
 
 ### Starting the Heater
 1. Place heater in upright position (tilt < 10°)
 2. Press button → Heater starts
-3. LED stays off (normal operation)
+3. LED stays on (normal operation)
+4. Tilt or push the heater. The heater stops and the LED blinks.
+5. If not tilted, it will stop automatically in 1 hour
 
 ### Safety Features
 

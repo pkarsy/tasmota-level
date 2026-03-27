@@ -3,19 +3,27 @@
 
 #var heater
 
+
 while true
   import strict
   import gpio
-  import level
+  #import level
+  if !global.level
+    print('load "level" driver first')
+    return nil
+  end
 
   # it will performed only on "load('level')"
   # when developing the heater code
-  try
-    if global.heater!=nil
+  #try
+    if global.heater != nil
       global.heater.cleanup()
-      global.heater=nil
+      global.heater = nil
       tasmota.gc()
     end
+  #except .. as e,m
+  #  print(e,m)
+  #end
 
   class PinController
     #
@@ -94,7 +102,7 @@ while true
       # we see the garbage collector in action
       print(self, '.deinit()')
     end
-  end # end of PinContorller
+  end # end of PinController
 
   class HeaterController
     var heater_on # true/false
@@ -129,10 +137,20 @@ while true
     
     # Start heater
     def start()
+      # Check if device is tilted before starting
+      var current_tilt = level.tilt()
+      if current_tilt == nil
+        print('HEATER: Cannot start - level sensor not calibrated')
+        return
+      end
+      if current_tilt > self.tilt_limit
+        print('HEATER: Cannot start - device is tilted (' + str(current_tilt) + '°)')
+        return
+      end
       tasmota.remove_timer(self)
       self.relay.on()
       self.led.on()
-      tasmota.set_timer(20000, /-> self.stop() ,self)
+      tasmota.set_timer(self.heater_timeout, /-> self.stop(), self)
       level.tilt_monitor(/-> self._tilt_trigger())
       if !self.heater_on
         print('Heater is started')

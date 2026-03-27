@@ -1,9 +1,7 @@
-# Tasmota-Level Auto-execution script
-# Loads the MPU6050 level driver on boot
-
-# Load the MPU6050 driver
+# Loads the level driver on boot
 import level
+# You can instead do
+# load('level') which allows for reloading the driver (developing)
 
-# Auto-calibrate on boot (place device level before powering on)
-# tasmota.set_timer(2000, /-> global.level.calibrate())
+# Do NOT calibrate the device here. You have been warned
 

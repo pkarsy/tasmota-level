@@ -7,20 +7,25 @@
 while true
   import strict
   import gpio
-  #import level
-  if global.level == nil
-    print('HEATER: level driver not loaded (no IMU detected). Check wiring.')
+  import level
+  if level == nil
+    print('HEATER: level driver is not found a known IMU. Exit')
+    return nil
+  end
+
+  if level.calibrated == false
+    print('HEATER: Calibrate the level driver before using the heater')
     return nil
   end
 
   # it will performed only on "load('level')"
   # when developing the heater code
   #try
-    if global.heater != nil
-      global.heater.cleanup()
-      global.heater = nil
-      tasmota.gc()
-    end
+  #  if global.heater != nil
+  #    global.heater.cleanup()
+  #    global.heater = nil
+  #    tasmota.gc()
+  #  end
   #except .. as e,m
   #  print(e,m)
   #end
@@ -98,8 +103,7 @@ while true
     end
     
     def deinit()
-      #self.cleanup()
-      # we see the garbage collector in action
+      # we see the garbage collector in action (development)
       print(self, '.deinit()')
     end
   end # end of PinController

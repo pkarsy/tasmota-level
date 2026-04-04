@@ -1,4 +1,4 @@
-# Bubble Level for Tasmota/Berry - Supports QMI8658, MPU6050, LSM6DS3, ADXL345, BMI160
+# Bubble Level for Tasmota/Berry - Supports QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160
 
 # during development we can also load the driver with
 # load("level"). This allows for multiple reloads
@@ -24,31 +24,40 @@ do
 
   var MSG = 'LEVEL: '
 
-  # Configure MPU6050: wake up, set range, enable low-pass filter
+  # Configure MPU6050/MPU9150/MPU9250: wake up, set range, enable low-pass filter
+  # These chips share the same accelerometer registers and configuration
   def mpu6050_init()
     var MPU6050_ADDR = 0x68
     var addr = MPU6050_ADDR
     var w = tasmota.wire_scan(MPU6050_ADDR)
     if w == nil # NO device at all
-      print(MSG + 'MPU6050 not found at 0x' .. string.hex(MPU6050_ADDR))
+      print(MSG + 'MPU6050/9150/9250 not found at 0x' .. string.hex(MPU6050_ADDR))
       return nil
-    elif w.read(addr, 0x75, 1) != 0x68 # WHO_AM_I register
-      print(MSG + 'The device at 0x' .. string.hex(MPU6050_ADDR) .. ' is not a MPU6050')
-      return nil
-    else # MPU6050 is wired
-      print(MSG + 'MPU6050 found at 0x' .. string.hex(MPU6050_ADDR))
-      # Wake up (clear sleep bit)
-      w.write_bytes(addr, 0x6B, bytes().add(0x00, 1))
-      # Set accelerometer range to ±2g
-      w.write_bytes(addr, 0x1C, bytes().add(0x00, 1))
-      # Set DLPF to ~44Hz to reduce noise
-      w.write_bytes(addr, 0x1A, bytes().add(0x03, 1))
-      return [MPU6050_ADDR, w]
     end
+    # WHO_AM_I register - different values for different chips
+    # MPU6050: 0x68, MPU9150: 0x68 (same chip with external AK8975 mag), MPU9250: 0x71 or 0x73
+    var whoami = w.read(addr, 0x75, 1)
+    var chip_name = nil
+    if whoami == 0x68
+      chip_name = 'MPU6050/9150'
+    elif whoami == 0x71 || whoami == 0x73
+      chip_name = 'MPU9250'
+    else
+      print(MSG + 'The device at 0x' .. string.hex(MPU6050_ADDR) .. ' is not a supported MPU chip (WHO_AM_I=0x' .. string.hex(whoami) .. ')')
+      return nil
+    end
+    print(MSG + chip_name + ' found at 0x' .. string.hex(MPU6050_ADDR))
+    # Wake up (clear sleep bit)
+    w.write_bytes(addr, 0x6B, bytes().add(0x00, 1))
+    # Set accelerometer range to ±2g
+    w.write_bytes(addr, 0x1C, bytes().add(0x00, 1))
+    # Set DLPF to ~44Hz to reduce noise
+    w.write_bytes(addr, 0x1A, bytes().add(0x03, 1))
+    return [MPU6050_ADDR, w]
   end
 
   # Read accelerometer and return [ax, ay, az] in g units
-  # The addr is always 0x68 but the function must be compatible with all x_read_accel functions
+  # Works for MPU6050, MPU9150, and MPU9250 (same accelerometer interface)
   def mpu6050_read_accel(addr, w)
     var d = w.read_bytes(addr, 0x3B, 6)
     if size(d) != 6
@@ -658,7 +667,7 @@ do
     level = LEVEL(imu[0], imu[1], bmi160_read_accel)
     return level
   end
-  print(MSG + 'No supported IMU module found. Supported: QMI8658, MPU6050, LSM6DS3, ADXL345, BMI160')
+  print(MSG + 'No supported IMU module found. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160')
   return nil
 
 end # EOF

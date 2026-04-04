@@ -75,8 +75,14 @@ Having the driver loaded at boot and available as a global module helps to see p
 ```sh
 import level
 ```
+OR even easier without leaving the Berry Console:
+```sh
+tasmota.urlfetch('https://raw.githubusercontent.com/pkarsy/tasmota-level/main/autoexec.be')
+```
 
-**Note: The module must be calibrated to work properly.**
+**Remember: The module must be calibrated to work properly.**
+
+> **⚠️ IMPORTANT:** If no supported IMU is detected, `level` will be `nil`. Always check `if level != nil` before calling methods in production code.
 
 On boot, the driver will:
 - Scan for the accelerometer chip
@@ -109,6 +115,8 @@ level.tilt_monitor(/->my.method())
 ```
 
 ## Heater Safety Controller
+
+> **⚠️ WARNING:** Use of the Heater Safety Controller is at your own risk. See [LICENSE](LICENSE) for full disclaimer. The developer assumes no liability for any damages or injuries.
 
 See `heater/` for a complete working example that uses this driver for heater safety (also fans etc):
 

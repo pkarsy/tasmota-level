@@ -2,9 +2,6 @@
 
 A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU/accelerometer (QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160 - more can be added easily).
 
-> **⚠️ WORK IN PROGRESS ⚠️**  
-This driver is currently being tested. The API may change as issues are discovered. Use with caution until v1.0 is released.
-
 ## Overview
 
 - **No recompilation required**: Install and configure without rebuilding Tasmota firmware. This is important as the support for MPU6050 and other IMUs exists but is not currently compiled in stock Tasmota builds.
@@ -14,14 +11,14 @@ This driver is currently being tested. The API may change as issues are discover
 ## Hardware Requirements
 
 - ESP32-based module running Tasmota
-- QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, or BMI160 I2C accelerometer/gyroscope sensor (MMA8452 is coming soon). Only the accelerometer is used (no gyro DMP interrupts etc).
-- An enclosure or device where the ESP32 and the sensor are mounted.
+- QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, or BMI160 I2C accelerometer/gyroscope sensor. Only the accelerometer is used (so no gyro, DMP, interrupts etc).
+- An enclosure or device where the ESP32 and the sensor are mounted. For example a heater(see below) or a fan
 
 ## Warning for fake parts
 Short answer: Use qmi8658.
 
 Long answer: 
-MPU6050 is EOL (for a long time) and most breakout boards on online stores have fake or recycled parts. The other parts can have similar problems (to a lesser degree, however), so purchasing through authorized distributors is a good strategy. The only part one can somewhat trust (no guarantees!) is QMI8658 because the original part is of very low cost, so the incentive of making LOWER cost fakes is minimal (faking costs too!). It is better to hunt for chips on AliExpress, for example, from a reputable seller of electronic parts.
+MPU6050 is EOL (for a long time) and most breakout boards on online stores have fake or recycled MPU6050 parts. The other parts can have similar problems (to a lesser degree, however), so purchasing through authorized distributors is a good strategy. The only part one can somewhat trust (no guarantees!) on Aliexpress/Ebay is QMI8658 because the original part is of very low cost, so the incentive of making LOWER cost fakes, is minimal (faking costs too!). To be fair I have purchased a lot of parts from Aliexpress (all the above brands), and seem to work OK.
 
 ## Wiring
 

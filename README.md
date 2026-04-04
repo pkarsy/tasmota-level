@@ -1,7 +1,5 @@
 # Tasmota-Level
 
-Under CONSTRUCTION
-
 A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU/accelerometer (QMI8658, MPU6050, LSM6DS3, ADXL345, BMI160 - more can be added easily).
 
 > **⚠️ WORK IN PROGRESS ⚠️**  
@@ -41,32 +39,37 @@ It is very convenient to select pins on ESP that are nearby (Vcc-Gnd-Scl-Sda) us
 ### Step 1: Initial Setup (Interactive)
 
 **First time only** - Tasmota Web Interface -> Tools -> Berry Console:
+1. **Download the driver**:
    ```sh
-   tasmota.urlfetch('https://raw.githubusercontent.com/pkarsy/tasmota-level/refs/heads/main/level.be')
+   tasmota.urlfetch('https://raw.githubusercontent.com/pkarsy/tasmota-level/main/level.be')
    ```
-2. **Load the driver interactively** (berry console):
+2. **Load the driver interactively**:
    ```sh
    import level
    ```
-   If MPU6050 is found, you'll see:
+   If a supported IMU is found, you'll see:
    ```
    LEVEL: MPU6050 found at 0x68
    LEVEL: No saved calibration found. Run: level.calibrate()
    ```
+   If no IMU is found, you'll see:
+   ```
+   LEVEL: No supported IMU module found. Supported: QMI8658, MPU6050, LSM6DS3, ADXL345, BMI160
+   ```
 
-4. **Place your device in the "level" position** (the orientation you want to define as horizontal)
+3. **Place your device in the "level" position** (the orientation you want to define as horizontal)
    The IMU must be well fixed inside the box, otherwise the calibration will not last.
 
-5. **Calibrate**:
+4. **Calibrate**:
    ```sh
    level.calibrate()
    ```
-   
+
    This measures the gravity vector and saves it to flash.
 
-   Note that if the internal orientation of the IMU changes due to hardware modifications, you have to recalibrate the device. 
+   Note that if the internal orientation of the IMU changes due to hardware modifications, you have to recalibrate the device.
 
-6. **Test the readings**:
+5. **Test the readings**:
    ```sh
    level.tilt()
    ```
@@ -79,7 +82,7 @@ Having the driver loaded at boot and available as a global module helps to see p
 import level
 ```
 
-**From now on we assume the module is calibrated, otherwise it won't work, obviously.**
+**Note: The module must be calibrated to work properly.**
 
 On boot, the driver will:
 - Scan for the accelerometer chip
@@ -91,7 +94,7 @@ On boot, the driver will:
 
 | Function | Returns | Description |
 |----------|---------|-------------|
-| `level.calibrate()` | `[x,y,z]` or `nil` | Calibrate device. Saves to flash. |
+| `level.calibrate()` | `nil` | Calibrate device. Saves to flash. Prints the calibration vector. |
 | `level.tilt()` | degrees or `nil` | Get tilt from vertical in degrees |
 | `level.tilt_rad()` | radians or `nil` | Get tilt from vertical in radians |
 | `level.set_calibration([cal_x, cal_y, cal_z])` | `true`/`false` | Apply calibration vector manually - probably you do not need this |
@@ -102,15 +105,13 @@ On boot, the driver will:
 # Get current tilt
 var tilt = level.tilt()
 if tilt != nil
-  print("Tilt: " + str(tilt) + " degrees")
+  print('Tilt: ' + str(tilt) + ' degrees')
 end
 
 # Monitor the tilt and call a function when tilt() > 10deg
-# when tilt exceeds 10deg
-level.tilt_monitor( myfunction )
-level.tilt_monitor( /->my.method() )
+level.tilt_monitor(myfunction)
+level.tilt_monitor(/->my.method())
 # the heater app depends on this
-
 ```
 
 ## Heater Safety Controller
@@ -128,8 +129,7 @@ This is a hobbyist project. Contributions welcome! Please test thoroughly and re
 
 ## Tips
 - Inside the box, make the USB port accessible (for easier recovery)
-- You can avoid accidental resets using:
-  > backlog TODO
+- Ensure the IMU module is firmly fixed inside the enclosure to maintain calibration
 
 ## License
 

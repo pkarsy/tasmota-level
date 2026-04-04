@@ -8,8 +8,8 @@ while true
   import strict
   import gpio
   #import level
-  if !global.level
-    print('load "level" driver first')
+  if global.level == nil
+    print('HEATER: level driver not loaded (no IMU detected). Check wiring.')
     return nil
   end
 

@@ -2,7 +2,7 @@
 
 Under CONSTRUCTION
 
-A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU/accelerometer (QMI8658, MPU6050, LSM6DS3 - more can be added easily).
+A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU/accelerometer (QMI8658, MPU6050, LSM6DS3, ADXL345, BMI160 - more can be added easily).
 
 > **⚠️ WORK IN PROGRESS ⚠️**  
 This driver is currently being tested. The API may change as issues are discovered. Use with caution until v1.0 is released.
@@ -16,7 +16,7 @@ This driver is currently being tested. The API may change as issues are discover
 ## Hardware Requirements
 
 - ESP32-based module running Tasmota
-- QMI8658, MPU6050, or LSM6DS3 I2C accelerometer/gyroscope sensor (MMA8452, ADXL345 are coming soon). Only the accelerometer is used (no gyro DMP interrupts etc).
+- QMI8658, MPU6050, LSM6DS3, ADXL345, or BMI160 I2C accelerometer/gyroscope sensor (MMA8452 is coming soon). Only the accelerometer is used (no gyro DMP interrupts etc).
 - An enclosure or device where the ESP32 and the sensor are mounted.
 
 ## Warning for fake parts

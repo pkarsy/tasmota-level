@@ -1,4 +1,4 @@
-# MPU6050/QMI... Bubble Level for Tasmota/Berry
+# Bubble Level for Tasmota/Berry - Supports QMI8658, MPU6050, LSM6DS3, ADXL345, BMI160
 
 # during development we can also load the driver with
 # load("level"). This allows for multiple reloads
@@ -27,12 +27,14 @@ do
   # Configure MPU6050: wake up, set range, enable low-pass filter
   def mpu6050_init()
     var MPU6050_ADDR = 0x68
-    var addr = MPU6050_ADDR # TODO dup
+    var addr = MPU6050_ADDR
     var w = tasmota.wire_scan(MPU6050_ADDR)
     if w == nil # NO device at all
       print(MSG + 'MPU6050 not found at 0x' .. string.hex(MPU6050_ADDR))
-    elif w.read(addr, 0x75, 1)!=0x68 # WHO_AM_I register
-      print(MSG .. 'The device at ' .. string.hex(MPU6050_ADDR) .. ' is not a MPU6050')
+      return nil
+    elif w.read(addr, 0x75, 1) != 0x68 # WHO_AM_I register
+      print(MSG + 'The device at 0x' .. string.hex(MPU6050_ADDR) .. ' is not a MPU6050')
+      return nil
     else # MPU6050 is wired
       print(MSG + 'MPU6050 found at 0x' .. string.hex(MPU6050_ADDR))
       # Wake up (clear sleep bit)
@@ -41,7 +43,7 @@ do
       w.write_bytes(addr, 0x1C, bytes().add(0x00, 1))
       # Set DLPF to ~44Hz to reduce noise
       w.write_bytes(addr, 0x1A, bytes().add(0x03, 1))
-      return [MPU6050_ADDR,w]
+      return [MPU6050_ADDR, w]
     end
   end
 
@@ -59,14 +61,13 @@ do
     end
     var scale = 16384.0
     return [
-    to_i16(d[0], d[1]) / scale,
-    to_i16(d[2], d[3]) / scale,
-    to_i16(d[4], d[5]) / scale
+      to_i16(d[0], d[1]) / scale,
+      to_i16(d[2], d[3]) / scale,
+      to_i16(d[4], d[5]) / scale
     ]
   end
 
   # Initialize and configure the QMI8658
-  # This replaces your MPU6050 _configure() function
   def qmi8658_init()
     # Define I2C Address - Try 0x6A first, then 0x6B if it doesn't work.
     var QMI8658_ADDR1 = 0x6A
@@ -83,24 +84,25 @@ do
     if w == nil
       w = tasmota.wire_scan(QMI8658_ADDR2)
       if w == nil
-        print("QMI8658 not found")
-        return
+        print(MSG + 'QMI8658 not found')
+        return nil
       else
         addr = QMI8658_ADDR2
       end
-    else addr = QMI8658_ADDR1
+    else
+      addr = QMI8658_ADDR1
     end
-    # --- 1. Verify the sensor is present ---
+    # Verify the sensor is present
     var id = w.read_bytes(addr, QMI8658_REG_WHO_AM_I, 1)
     if id == nil || id.size() == 0
-      print("QMI8658: Failed to read WHO_AM_I")
-      return
+      print(MSG + 'QMI8658: Failed to read WHO_AM_I')
+      return nil
     end
     if id[0] != 0x05
-      print("QMI8658: Invalid WHO_AM_I value: ", id[0])
-      return
+      print(MSG + 'QMI8658: Invalid WHO_AM_I value: ' + str(id[0]))
+      return nil
     end
-    print("QMI8658: Detected successfully!")
+    print(MSG + 'QMI8658 found at 0x' .. string.hex(addr))
     # --- 2. Reset the sensor (recommended) ---
     w.write_bytes(addr, QMI8658_REG_RESET, bytes().add(0xB0, 1))
     tasmota.delay(50)  # Wait for reset to complete (blocking, happens once at init)
@@ -116,11 +118,10 @@ do
     # CTRL3: Configure Gyroscope (optional, but included)
     # self.w.write_bytes(addr, QMI8658_REG_CTRL3, bytes().add(0xD5, 1)) # 512dps, 250Hz
     tasmota.delay(10)
-    return [addr,w]
+    return [addr, w]
   end
 
   # Read accelerometer and return [ax, ay, az] in g units
-  # This mirrors your read_accel() function structure
   def qmi8658_read_accel(addr, w)
     var QMI8658_REG_AX_L = 0x35        # Accelerometer X-axis low byte
     # Read 6 bytes starting from the AX_L register (0x35)
@@ -143,9 +144,9 @@ do
     # Note: QMI8658 stores data in Little Endian format (low byte first).
     # This is different from MPU6050 (Big Endian).
     return [
-    to_i16(d[0], d[1]) / scale,
-    to_i16(d[2], d[3]) / scale,
-    to_i16(d[4], d[5]) / scale
+      to_i16(d[0], d[1]) / scale,
+      to_i16(d[2], d[3]) / scale,
+      to_i16(d[4], d[5]) / scale
     ]
   end
 
@@ -161,14 +162,13 @@ do
     var LSM6DS3_CTRL1_XL = 0x10    # Accelerometer control
     var LSM6DS3_CTRL2_G = 0x11     # Gyroscope control
     var LSM6DS3_CTRL3_C = 0x12     # Control register 3
-    #
     var addr = 0
     # Try both addresses
     var w = tasmota.wire_scan(LSM6DS3_ADDR1)
     if w == nil
       w = tasmota.wire_scan(LSM6DS3_ADDR2)
       if w == nil
-        print("LSM6DS3: Not found")
+        print(MSG + 'LSM6DS3 not found')
         return nil
       else
         addr = LSM6DS3_ADDR2
@@ -179,14 +179,14 @@ do
     # Check WHO_AM_I
     var id = w.read_bytes(addr, LSM6DS3_WHO_AM_I, 1)
     if id == nil || id.size() == 0
-      print("LSM6DS3: Failed to read WHO_AM_I")
+      print(MSG + 'LSM6DS3: Failed to read WHO_AM_I')
       return nil
     end
     if id[0] != 0x69 && id[0] != 0x6A  # 0x69 for LSM6DS3, 0x6A for LSM6DS3TR-C
-      print("LSM6DS3: Invalid WHO_AM_I: 0x") # .. string.hex(id[0]))
+      print(MSG + 'LSM6DS3: Invalid WHO_AM_I: 0x' + string.hex(id[0]))
       return nil
     end
-    print("LSM6DS3: Found at 0x") # .. string.hex(addr) .. ", WHO_AM_I=0x" .. string.hex(id[0]))
+    print(MSG + 'LSM6DS3 found at 0x' .. string.hex(addr))
     # Software reset
     w.write_bytes(addr, LSM6DS3_CTRL3_C, bytes().add(0x01, 1))  # SW_RESET
     tasmota.delay(10)
@@ -203,7 +203,7 @@ do
       w.write_bytes(addr, LSM6DS3_CTRL3_C, bytes().add(ctrl3[0] | 0x40, 1))
     end
     tasmota.delay(10)
-    print("LSM6DS3: Configured (104Hz, ±2g)")
+    print(MSG + 'LSM6DS3 configured (104Hz, ±2g)')
     return [addr, w]
   end
 
@@ -226,9 +226,96 @@ do
       if v > 32767 v -= 65536 end
       return v
     end
-    # Scale for ±2g: 0.061 mg/LSB = 0.000061 g/LSB
-    # Or: 1 g = 16384 LSB (same as MPU6050!)
-    var scale = 16384.0  # LSB/g for ±2g range
+    # Scale for ±2g: 16384 LSB/g (same as MPU6050)
+    var scale = 16384.0
+    return [
+      to_i16(d[0], d[1]) / scale,
+      to_i16(d[2], d[3]) / scale,
+      to_i16(d[4], d[5]) / scale
+    ]
+  end
+
+  ###############################################################################
+  # BMI160 support
+  ###############################################################################
+
+  # Initialize BMI160
+  # Returns: [addr, wire] or nil on failure
+  def bmi160_init()
+    # BMI160 I2C addresses: 0x68 (SDO low) or 0x69 (SDO high)
+    var BMI160_ADDR1 = 0x68
+    var BMI160_ADDR2 = 0x69
+    var BMI160_CHIP_ID = 0x00          # Should return 0xD1
+    var BMI160_PMU_STATUS = 0x03       # Power mode status
+    var BMI160_CMD = 0x7E              # Command register
+    var BMI160_ACC_CONF = 0x40         # Accelerometer config
+    var BMI160_ACC_RANGE = 0x41        # Accelerometer range
+
+    var addr = 0
+    var w = tasmota.wire_scan(BMI160_ADDR1)
+    if w == nil
+      w = tasmota.wire_scan(BMI160_ADDR2)
+      if w == nil
+        print(MSG + 'BMI160 not found')
+        return nil
+      else
+        addr = BMI160_ADDR2
+      end
+    else
+      addr = BMI160_ADDR1
+    end
+
+    # Check chip ID
+    var id = w.read_bytes(addr, BMI160_CHIP_ID, 1)
+    if id == nil || id.size() == 0
+      print(MSG + 'BMI160: Failed to read CHIP_ID')
+      return nil
+    end
+    if id[0] != 0xD1
+      print("BMI160: Invalid CHIP_ID: 0x" + string.hex(id[0]))
+      return nil
+    end
+    print(MSG + 'BMI160 found at 0x' + string.hex(addr))
+
+    # Set accelerometer to normal mode (0x11 command)
+    w.write_bytes(addr, BMI160_CMD, bytes().add(0x11, 1))
+    tasmota.delay(5)
+
+    # Set accelerometer range to ±2g (0x03)
+    w.write_bytes(addr, BMI160_ACC_RANGE, bytes().add(0x03, 1))
+    tasmota.delay(1)
+
+    # Set output data rate to 100Hz
+    w.write_bytes(addr, BMI160_ACC_CONF, bytes().add(0x28, 1))
+    tasmota.delay(1)
+
+    print(MSG + 'BMI160 configured (100Hz, ±2g)')
+    return [addr, w]
+  end
+
+  # Read accelerometer from BMI160
+  # Returns: [ax, ay, az] in g units or nil on failure
+  def bmi160_read_accel(addr, w)
+    var BMI160_ACC_DATA_X_LSB = 0x12   # Accelerometer X low byte
+    # Read 6 bytes (X low, X high, Y low, Y high, Z low, Z high)
+    var d = w.read_bytes(addr, BMI160_ACC_DATA_X_LSB, 6)
+    if d == nil || size(d) != 6
+      print(MSG + 'BMI160: Failed to read accelerometer data')
+      return nil
+    end
+
+    # Helper: convert little-endian (low byte first) to signed int16
+    def to_i16(l, h)
+      var v = (h << 8) | l
+      if v > 32767
+        v -= 65536
+      end
+      return v
+    end
+
+    # Scale factor: ±2g range has 16384 LSB/g (same as MPU6050)
+    var scale = 16384.0
+
     return [
       to_i16(d[0], d[1]) / scale,
       to_i16(d[2], d[3]) / scale,
@@ -256,7 +343,7 @@ do
     if w == nil
       w = tasmota.wire_scan(ADXL345_ADDR2)
       if w == nil
-        print("ADXL345: Not found")
+        print(MSG + 'ADXL345 not found')
         return nil
       else
         addr = ADXL345_ADDR2
@@ -268,14 +355,14 @@ do
     # Check device ID
     var id = w.read_bytes(addr, ADXL345_DEVID, 1)
     if id == nil || id.size() == 0
-      print("ADXL345: Failed to read DEVID")
+      print(MSG + 'ADXL345: Failed to read DEVID')
       return nil
     end
     if id[0] != 0xE5
-      print("ADXL345: Invalid DEVID: 0x" + string.hex(id[0]))
+      print(MSG + 'ADXL345: Invalid DEVID: 0x' + string.hex(id[0]))
       return nil
     end
-    print("ADXL345: Detected at 0x" + string.hex(addr))
+    print(MSG + 'ADXL345 found at 0x' + string.hex(addr))
 
     # Set data format: full resolution, ±2g
     # 0x08 = 0000 1000 -> FULL_RES=1, range=00 (±2g)
@@ -291,7 +378,7 @@ do
     w.write_bytes(addr, ADXL345_POWER_CTL, bytes().add(0x08, 1))
     tasmota.delay(1)
 
-    print("ADXL345: Configured (full resolution, ±2g, 100 Hz)")
+    print(MSG + 'ADXL345 configured (full resolution, ±2g, 100Hz)')
     return [addr, w]
   end
 
@@ -302,7 +389,7 @@ do
     # Read 6 bytes (X low, X high, Y low, Y high, Z low, Z high)
     var d = w.read_bytes(addr, ADXL345_DATAX0, 6)
     if d == nil || size(d) != 6
-      print("ADXL345: Failed to read accelerometer data")
+      print(MSG + 'ADXL345: Failed to read accelerometer data')
       return nil
     end
 
@@ -349,10 +436,10 @@ do
         print('level.init() needs addr, w, read_accel')
         return
       end
-      self.cal_x = 0.0 # TODO nil
+      self.cal_x = 0.0
       self.cal_y = 0.0
       self.cal_z = 1.0
-      self.calibrated = false # TODO in the above are nil - not needed
+      self.calibrated = false
       self.w = w
       self.addr = addr
       self.read_accel = read_accel
@@ -566,5 +653,12 @@ do
     level = LEVEL(imu[0], imu[1], adxl345_read_accel)
     return level
   end
+  imu = bmi160_init()
+  if imu != nil
+    level = LEVEL(imu[0], imu[1], bmi160_read_accel)
+    return level
+  end
+  print(MSG + 'No supported IMU module found. Supported: QMI8658, MPU6050, LSM6DS3, ADXL345, BMI160')
+  return nil
 
 end # EOF

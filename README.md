@@ -61,10 +61,7 @@ It is very convenient to select pins on ESP that are nearby (Vcc-Gnd-Scl-Sda) us
    ```sh
    level.calibrate()
    ```
-
-   This measures the gravity vector and saves it to flash.
-
-   Note that if the internal orientation of the IMU changes due to hardware modifications, you have to recalibrate the device.
+   This measures the gravity vector and saves it to flash. The .calibrate() method is only for intercative use and is performed once. If however the internal orientation of the accellerometer changes due to hardware modifications, you have to recalibrate the device.
 
 5. **Test the readings**:
    ```sh

@@ -667,7 +667,6 @@ do
     level = LEVEL(imu[0], imu[1], bmi160_read_accel)
     return level
   end
-  print(MSG + 'No supported IMU module found. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160')
-  return nil
+  raise "LEVEL: No IMU detected. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160. Check wiring and I2C configuration."
 
 end # EOF

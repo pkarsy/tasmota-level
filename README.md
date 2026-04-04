@@ -101,6 +101,20 @@ On boot, the driver will:
 
 ### Example Usage
 
+> **⚠️ IMPORTANT:** Any code using the level driver **MUST** check these two conditions before use:
+> ```berry
+> import level
+> if level == nil
+>   print('No IMU detected - check wiring')
+>   return nil
+> end
+> if level.calibrated == false
+>   print('IMU not calibrated - run level.calibrate()')
+>   return nil
+> end
+> # Now safe to use level.tilt() etc
+> ```
+
 ```berry
 # Get current tilt
 var tilt = level.tilt()

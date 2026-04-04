@@ -5,7 +5,7 @@
 
 if global.level != nil
   try
-    global.level.cleanup()  # Remove timers, rules, etc
+    global.level.stop_tilt_monitor()  # Remove timers, rules, etc
   except .. as e, m
     print('Cleanup method is not present:', e, m)
   end
@@ -93,7 +93,7 @@ do
     if w == nil
       w = tasmota.wire_scan(QMI8658_ADDR2)
       if w == nil
-        print(MSG + 'QMI8658 not found')
+        print(MSG + 'QMI8658 not found at 0x' .. string.hex(QMI8658_ADDR1) .. ' or 0x' .. string.hex(QMI8658_ADDR2))
         return nil
       else
         addr = QMI8658_ADDR2
@@ -177,7 +177,7 @@ do
     if w == nil
       w = tasmota.wire_scan(LSM6DS3_ADDR2)
       if w == nil
-        print(MSG + 'LSM6DS3 not found')
+        print(MSG + 'LSM6DS3 not found at 0x' .. string.hex(LSM6DS3_ADDR1) .. ' or 0x' .. string.hex(LSM6DS3_ADDR2))
         return nil
       else
         addr = LSM6DS3_ADDR2
@@ -265,7 +265,7 @@ do
     if w == nil
       w = tasmota.wire_scan(BMI160_ADDR2)
       if w == nil
-        print(MSG + 'BMI160 not found')
+        print(MSG + 'BMI160 not found at 0x' .. string.hex(BMI160_ADDR1) .. ' or 0x' .. string.hex(BMI160_ADDR2))
         return nil
       else
         addr = BMI160_ADDR2
@@ -352,7 +352,7 @@ do
     if w == nil
       w = tasmota.wire_scan(ADXL345_ADDR2)
       if w == nil
-        print(MSG + 'ADXL345 not found')
+        print(MSG + 'ADXL345 not found at 0x' .. string.hex(ADXL345_ADDR1) .. ' or 0x' .. string.hex(ADXL345_ADDR2))
         return nil
       else
         addr = ADXL345_ADDR2

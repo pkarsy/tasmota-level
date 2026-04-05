@@ -585,20 +585,26 @@ do
       return self._deg(self.tilt_rad())
     end
 
-    def tilt_monitor(callback, interval) # action to be triggered, interval in ms
+    def tilt_monitor(callback, interval, max_tilt) # action to be triggered, interval in ms, max_tilt in degrees
       tasmota.remove_timer(self)
       if interval == nil interval = 100 end
+      if max_tilt == nil max_tilt = 10 end
       self.interval = interval
-      if type(interval) != 'int' || interval<=0
+      self.tilt_max_angle = max_tilt
+      if type(interval) != 'int' || interval <= 0
         print('Wrong value for interval, must be ms')
         return
       end
-      if type(callback)!='function'
+      if type(max_tilt) != 'int' || max_tilt <= 0
+        print('Wrong value for max_tilt, must be degrees')
+        return
+      end
+      if type(callback) != 'function'
         print('Callback must be a function')
         return
       end
       self.tilt_callback = callback
-      print("Starting tilt monitor")
+      print('Starting tilt monitor (max_tilt: ' + str(max_tilt) + '°)')
       self._tilt()
     end # tilt_monitor(..)
 
@@ -616,8 +622,8 @@ do
         return
       end
       var t = self.tilt()
-      if t>10
-        print("Tilt detected") # monitor is stopped, it needs to reenable
+      if t > self.tilt_max_angle
+        print('Tilt detected: ' + str(t) + '° > ' + str(self.tilt_max_angle) + '°')
         var cb = self.tilt_callback
         self.tilt_callback = nil
         cb(t)

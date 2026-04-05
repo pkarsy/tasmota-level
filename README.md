@@ -97,7 +97,7 @@ On boot, the driver will:
 | `level.calibrate()` | `nil` | Calibrate device. Saves to flash. Prints the calibration vector. |
 | `level.tilt()` | degrees or `nil` | Get tilt from vertical in degrees |
 | `level.tilt_rad()` | radians or `nil` | Get tilt from vertical in radians |
-| `level.tilt_monitor(callback, interval)` | `nil` | Start monitoring tilt. Calls `callback(tilt)` when tilt > 10°. Interval in ms (default 100). |
+| `level.tilt_monitor(callback, interval, max_tilt)` | `nil` | Start monitoring tilt. Calls `callback(tilt)` when tilt > max_tilt°. Interval in ms (default 100). max_tilt in degrees (default 10). |
 | `level.stop_tilt_monitor()` | `nil` | Stop the tilt monitor |
 | `level.set_calibration([cal_x, cal_y, cal_z])` | `true`/`false` | Apply calibration vector manually - probably you do not need this |
 

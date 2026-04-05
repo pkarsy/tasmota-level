@@ -604,7 +604,7 @@ do
         return
       end
       self.tilt_callback = callback
-      print('Starting tilt monitor (max_tilt: ' + str(max_tilt) + '°)')
+      print('Starting tilt monitor (interval: ' + str(interval) + 'ms, max_tilt: ' + str(max_tilt) + '°)')
       self._tilt()
     end # tilt_monitor(..)
 

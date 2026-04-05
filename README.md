@@ -4,21 +4,23 @@ A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU
 
 ## Overview
 
+
+- **Much easier hardware installation than bubble tilt sensors**: Mount the module in any orientation that is most cenvenient. When the hardware ir ready, wirelessly calibrate the module.
+- **More presise, and configurable tilt trigger** Depending on application you may want 10deg trigger for example or any other value. Most IMU chips can do better than 1deg accuracy.
 - **No recompilation required**: Install and configure without rebuilding Tasmota firmware. This is important as the support for MPU6050 and other IMUs exists but is not currently compiled in stock Tasmota builds.
-- **Built-in calibration**: Calibrate the module (saved automatically to flash) to your specific mounting orientation. This makes the hardware installation much easier than bubble tilt sensors. You can mount the module in any orientation that is suitable.
 - **Survives firmware updates**: Berry scripts persist across Tasmota updates
 
 ## Hardware Requirements
 
 - ESP32-based module running Tasmota
-- QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, or BMI160 I2C accelerometer/gyroscope sensor. Only the accelerometer is used (so no gyro, DMP, interrupts etc).
+- QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, or BMI160 I2C accelerometer/gyroscope sensor. Only the accelerometer is used (so no gyro, DMP or interrupts).
 - An enclosure or device where the ESP32 and the sensor are mounted. For example a heater(see below) or a fan.
 
 ## Warning for fake parts
 Short answer: Use qmi8658.
 
 Long answer: 
-MPU6050 is EOL (for a long time) and most breakout boards on online stores have fake or recycled MPU6050 parts. The other parts can have similar problems (to a lesser degree, however), so purchasing through authorized distributors is a good strategy. The only part one can somewhat trust (no guarantees!) on Aliexpress/Ebay is QMI8658 because the original part is of very low cost, so the incentive of making LOWER cost fakes, is minimal (faking costs too!). To be fair I have purchased a lot of parts from Aliexpress (all the above brands), and seem to work OK.
+MPU6050 is EOL (for a long time) and most breakout boards on online stores have fake or recycled MPU6050 parts. The other parts can have similar problems (to a lesser degree, however), so purchasing through authorized distributors is a good strategy. The only part one can somewhat trust (no guarantees!) on Aliexpress/Ebay is QMI8658 because the original part is of very low cost, so the incentive of making LOWER cost fakes, is minimal (faking costs too!). To be fair, I have purchased a lot of parts from Aliexpress (all the above brands), and seem to work perfectly OK, at least the accellerometer this driver uses.
 
 ## Wiring
 
@@ -82,8 +84,6 @@ tasmota.urlfetch('https://raw.githubusercontent.com/pkarsy/tasmota-level/main/au
 
 **Remember: The module must be calibrated to work properly.**
 
-> **⚠️ IMPORTANT:** If no supported IMU is detected, `level` will be `nil`. Always check `if level != nil` before calling methods in production code.
-
 On boot, the driver will:
 - Scan for the accelerometer chip
 - Load saved calibration from flash
@@ -97,23 +97,26 @@ On boot, the driver will:
 | `level.calibrate()` | `nil` | Calibrate device. Saves to flash. Prints the calibration vector. |
 | `level.tilt()` | degrees or `nil` | Get tilt from vertical in degrees |
 | `level.tilt_rad()` | radians or `nil` | Get tilt from vertical in radians |
+| `level.tilt_monitor(callback, interval)` | `nil` | Start monitoring tilt. Calls `callback(tilt)` when tilt > 10°. Interval in ms (default 100). |
+| `level.stop_tilt_monitor()` | `nil` | Stop the tilt monitor |
 | `level.set_calibration([cal_x, cal_y, cal_z])` | `true`/`false` | Apply calibration vector manually - probably you do not need this |
 
 ### Example Usage
 
-> **⚠️ IMPORTANT:** Any code using the level driver **MUST** check these two conditions before use:
-> ```berry
-> import level
-> if level == nil
->   print('No IMU detected - check wiring')
->   return nil
-> end
-> if level.calibrated == false
->   print('IMU not calibrated - run level.calibrate()')
->   return nil
-> end
-> # Now safe to use level.tilt() etc
-> ```
+
+**⚠️ IMPORTANT:** If no supported IMU is detected, `level` will be `nil`. Even then there is the possibility that it is not calibrated. Any code using the level driver **MUST** check these two conditions before use:
+```berry
+import level
+if level == nil
+  print('No IMU detected - check wiring')
+  return nil
+end
+if level.calibrated == false
+  print('IMU not calibrated - run level.calibrate()')
+  return nil
+end
+```
+Now is safe to use level.tilt() and the other methods:
 
 ```berry
 # Get current tilt
@@ -125,12 +128,11 @@ end
 # Monitor the tilt and call a function when tilt() > 10deg
 level.tilt_monitor(myfunction)
 level.tilt_monitor(/->my.method())
-# the heater app depends on this
 ```
 
-## Heater Safety Controller
+## Heater tilt aware Controller
 
-> **⚠️ WARNING:** Use of the Heater Safety Controller is at your own risk. See [LICENSE](LICENSE) for full disclaimer. The developer assumes no liability for any damages or injuries.
+> **⚠️ WARNING:** Use of the Heater tilt aware Controller is at your own risk. See [LICENSE](LICENSE) for full disclaimer. The developer assumes no liability for any damages or injuries.
 
 See `heater/` for a complete working example that uses this driver for heater safety (also fans etc):
 

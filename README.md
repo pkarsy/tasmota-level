@@ -125,9 +125,11 @@ if tilt != nil
   print('Tilt: ' + str(tilt) + ' degrees')
 end
 
-# Monitor the tilt and call a function when tilt() > 10deg
+# Monitor the tilt and call a function when tilt() > max_tilt
+# Note: The monitor is automatically disabled after triggering. Call tilt_monitor() again to re-enable.
 level.tilt_monitor(myfunction)
 level.tilt_monitor(/->my.method())
+level.tilt_monitor(/->my.method(), 100, 15)  # custom interval (100ms) and max_tilt (15°)
 ```
 
 ## Heater tilt aware Controller

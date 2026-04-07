@@ -1,6 +1,6 @@
 # Tasmota-Level
 
-A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU/accelerometer (QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160 - more can be added easily).
+A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU/accelerometer (QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452 - more can be added easily).
 
 ## Overview
 
@@ -13,7 +13,7 @@ A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU
 ## Hardware Requirements
 
 - ESP32-based module running Tasmota
-- QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, or BMI160 I2C accelerometer/gyroscope sensor. Only the accelerometer is used (so no gyro, DMP or interrupts).
+- QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, or MMA8452 I2C accelerometer/gyroscope sensor. Only the accelerometer is used (so no gyro, DMP or interrupts).
 - An enclosure or device where the ESP32 and the sensor are mounted. For example a heater(see below) or a fan.
 
 ## Warning for fake parts
@@ -53,7 +53,7 @@ It is very convenient to select pins on ESP that are nearby (Vcc-Gnd-Scl-Sda) us
    ```
    If no IMU is found, you'll see:
    ```
-   LEVEL: No supported IMU module found. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160
+   LEVEL: No supported IMU module found. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452
    ```
 
 3. **Place your device in the "level" position** (the orientation you want to define as horizontal)

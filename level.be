@@ -421,6 +421,121 @@ do
     ]
   end
 
+# Initialize and configure the MMA8452
+def mma8452_init()
+  var MMA8452_ADDR1 = 0x1C  # SA0 = GND
+  var MMA8452_ADDR2 = 0x1D  # SA0 = VCC
+  var REG_WHO_AM_I = 0x0D   # Should return 0x2A
+  var REG_CTRL_REG1 = 0x2A
+  var REG_XYZ_DATA_CFG = 0x0E
+  
+  var w = nil
+  var addr = 0
+  
+  # Try first address
+  w = tasmota.wire_scan(MMA8452_ADDR1)
+  if w != nil
+    addr = MMA8452_ADDR1
+    # Verify WHO_AM_I with Repeated Start
+    w._begin_transmission(addr)
+    w._write(REG_WHO_AM_I)
+    w._end_transmission(false)
+    
+    if w._request_from(addr, 1) == 1
+      var whoami = w._read()
+      if whoami == 0x2A
+        print('MMA8452 found at 0x' .. string.hex(addr))
+      else
+        print('MMA8452: Invalid WHO_AM_I at 0x' .. string.hex(addr) .. ': 0x' .. string.hex(whoami))
+        w = nil  # Reset to try second address
+      end
+    else
+      w = nil
+    end
+  end
+  
+  # Try second address if first failed
+  if w == nil
+    w = tasmota.wire_scan(MMA8452_ADDR2)
+    if w == nil
+      print('MMA8452 not found at 0x' .. string.hex(MMA8452_ADDR1) .. ' or 0x' .. string.hex(MMA8452_ADDR2))
+      return nil
+    end
+    
+    addr = MMA8452_ADDR2
+    # Verify WHO_AM_I
+    w._begin_transmission(addr)
+    w._write(REG_WHO_AM_I)
+    w._end_transmission(false)
+    
+    if w._request_from(addr, 1) != 1 || w._read() != 0x2A
+      print('MMA8452: Invalid WHO_AM_I at 0x' .. string.hex(addr))
+      return nil
+    end
+    print('MMA8452 found at 0x' .. string.hex(addr))
+  end
+  
+  # Configure chip (must be in Standby to change settings)
+  w._begin_transmission(addr)
+  w._write(REG_CTRL_REG1)
+  w._write(0x00)  # Standby mode
+  w._end_transmission(true)
+  tasmota.delay(10)
+  
+  # XYZ_DATA_CFG: Set ±2g range
+  w._begin_transmission(addr)
+  w._write(REG_XYZ_DATA_CFG)
+  w._write(0x00)
+  w._end_transmission(true)
+  tasmota.delay(10)
+  
+  # CTRL_REG1: Activate (50Hz ODR, Active mode)
+  w._begin_transmission(addr)
+  w._write(REG_CTRL_REG1)
+  w._write(0x01)
+  w._end_transmission(true)
+  tasmota.delay(10)
+  
+  return [addr, w]
+end
+
+# Read accelerometer and return [ax, ay, az] in g units
+def mma8452_read_accel(addr, w)
+  var REG_OUT_X_MSB = 0x01
+  
+  # Read 6 bytes starting from OUT_X_MSB using Repeated Start
+  w._begin_transmission(addr)
+  w._write(REG_OUT_X_MSB)
+  w._end_transmission(false)
+  
+  var received = w._request_from(addr, 6)
+  if received != 6
+    print("MMA8452: Failed to read accel data")
+    return nil
+  end
+  
+  var d = bytes()
+  while w._available() > 0
+    d.add(w._read(), 1)
+  end
+  
+  def to_12bit(msb, lsb)
+    var v = ((msb << 8) | lsb) >> 4
+    if v > 2047
+      v -= 4096
+    end
+    return v
+  end
+  
+  var scale = 1024.0
+  
+  return [
+    to_12bit(d[0], d[1]) / scale,
+    to_12bit(d[2], d[3]) / scale,
+    to_12bit(d[4], d[5]) / scale
+  ]
+end
+
 
   class LEVEL
     #
@@ -653,11 +768,6 @@ do
     level = LEVEL(imu[0], imu[1], mpu6050_read_accel)
     return level
   end
-  #imu = mma8452_init()
-  #  if imu != nil
-  #  level = LEVEL(imu[0], imu[1],mma8452_read_accel)
-  #  return level
-  #end
   imu = lsm6ds3_init()
   if imu != nil
     level = LEVEL(imu[0], imu[1], lsm6ds3_read_accel)
@@ -673,7 +783,12 @@ do
     level = LEVEL(imu[0], imu[1], bmi160_read_accel)
     return level
   end
-  print(MSG + 'No IMU detected. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160')
+  imu = mma8452_init()
+    if imu != nil
+    level = LEVEL(imu[0], imu[1],mma8452_read_accel)
+    return level
+  end
+  print(MSG + 'No IMU detected. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452')
   return nil
 
 end # EOF

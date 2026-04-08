@@ -754,41 +754,63 @@ end
 
   end # end of LEVEL class
 
-  # Scan for the connected accelerometer (var imu) one by one
-  var imu
-  #
-  imu = qmi8658_init()
-  if imu != nil
-    level = LEVEL(imu[0], imu[1], qmi8658_read_accel)
-    return level
-  end
-  #
-  imu = mpu6050_init()
-  if imu != nil
-    level = LEVEL(imu[0], imu[1], mpu6050_read_accel)
-    return level
-  end
-  imu = lsm6ds3_init()
-  if imu != nil
-    level = LEVEL(imu[0], imu[1], lsm6ds3_read_accel)
-    return level
-  end
-  imu = adxl345_init()
-  if imu != nil
-    level = LEVEL(imu[0], imu[1], adxl345_read_accel)
-    return level
-  end
-  imu = bmi160_init()
-  if imu != nil
-    level = LEVEL(imu[0], imu[1], bmi160_read_accel)
-    return level
-  end
-  imu = mma8452_init()
+  def scan_imu()
+    # Scan for the connected accelerometer (var imu) one by one
+    #var imu
+    #
+    var imu = qmi8658_init()
     if imu != nil
-    level = LEVEL(imu[0], imu[1],mma8452_read_accel)
-    return level
+      level = LEVEL(imu[0], imu[1], qmi8658_read_accel)
+      return level
+    end
+    imu = mpu6050_init()
+    if imu != nil
+      level = LEVEL(imu[0], imu[1], mpu6050_read_accel)
+      return level
+    end
+    imu = lsm6ds3_init()
+    if imu != nil
+      level = LEVEL(imu[0], imu[1], lsm6ds3_read_accel)
+      return level
+    end
+    imu = adxl345_init()
+    if imu != nil
+      level = LEVEL(imu[0], imu[1], adxl345_read_accel)
+      return level
+    end
+    imu = bmi160_init()
+    if imu != nil
+      level = LEVEL(imu[0], imu[1], bmi160_read_accel)
+      return level
+    end
+    imu = mma8452_init()
+      if imu != nil
+      level = LEVEL(imu[0], imu[1],mma8452_read_accel)
+      return level
+    end
+    print(MSG + 'No IMU detected. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452')
+    return nil
   end
-  print(MSG + 'No IMU detected. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452')
-  return nil
 
-end # EOF
+  level = scan_imu()
+  #if level !=nil && level.calibrated
+  def tilt_cmd(cmd, idx, payload)
+    if level == nil
+      tasmota.resp_cmnd_error('Driver not loaded')
+    end
+    var t = level.tilt()
+    if t != nil
+      tasmota.resp_cmnd_str(str(t) + ' degrees')
+    else
+      tasmota.resp_cmnd_str('Not calibrated')
+    end
+  end
+
+  tasmota.add_cmd('tilt', tilt_cmd)
+
+  #print(MSG + 'Command "tilt" registered')
+
+  return level
+end
+
+

@@ -4,9 +4,10 @@ A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU
 
 ## Overview
 
+This driver is primarily designed to be used by other Berry programs that need tilt sensing capabilities. It provides a simple API for reading tilt angles and monitoring tilt events.
 
-- **Much easier hardware installation than bubble tilt sensors**: Mount the module in any orientation that is most cenvenient. When the hardware ir ready, wirelessly calibrate the module.
-- **More presise, and configurable tilt trigger** Depending on application you may want 10deg trigger for example or any other value. Most IMU chips can do better than 1deg accuracy.
+- **Much easier hardware installation than bubble tilt sensors**: Mount the module in any orientation that is most convenient. When the hardware is ready, wirelessly calibrate the module.
+- **More precise, and configurable tilt trigger** Depending on application you may want 10deg trigger for example or any other value. Most IMU chips can do better than 1deg accuracy.
 - **No recompilation required**: Install and configure without rebuilding Tasmota firmware. This is important as the support for MPU6050 and other IMUs exists but is not currently compiled in stock Tasmota builds.
 - **Survives firmware updates**: Berry scripts persist across Tasmota updates
 
@@ -17,7 +18,7 @@ A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU
 - An enclosure or device where the ESP32 and the sensor are mounted. For example a heater(see below) or a fan.
 
 ## Warning for fake parts
-MPU6050 is EOL (for a long time) and most breakout boards on online stores have fake or recycled MPU6050 parts. The other parts can have similar problems (to a lesser degree, however), so purchasing through authorized distributors is a good strategy. The only part one can somewhat trust (no guarantees!) on Aliexpress/Ebay is QMI8658 because the original part is nodern and of very low cost, so the incentive of making LOWER cost fakes, is minimal (faking costs too!). To be fair, I have purchased a lot of parts from Aliexpress (all the above brands), and seem to work perfectly OK, at least the accellerometer this driver uses.
+MPU6050 is EOL (for a long time) and most breakout boards on online stores have fake or recycled MPU6050 parts. The other parts can have similar problems (to a lesser degree, however), so purchasing through authorized distributors is a good strategy. The only part one can somewhat trust (no guarantees!) on Aliexpress/Ebay is QMI8658 because the original part is modern and of very low cost, so the incentive of making LOWER cost fakes, is minimal (faking costs too!). To be fair, I have purchased a lot of parts from Aliexpress (all the above brands), and seem to work perfectly OK, at least the accelerometer this driver uses.
 
 ## Wiring
 
@@ -60,7 +61,7 @@ It is very convenient to select pins on ESP that are nearby (Vcc-Gnd-Scl-Sda) us
    ```sh
    level.calibrate()
    ```
-   This measures the gravity vector and saves it to flash. The .calibrate() method is only for intercative use and is performed once. If however the internal orientation of the accellerometer changes due to hardware modifications, you have to recalibrate the device.
+   This measures the gravity vector and saves it to flash. The .calibrate() method is only for interactive use and is performed once. If however the internal orientation of the accelerometer changes due to hardware modifications, you have to recalibrate the device.
 
 5. **Test the readings**:
    ```sh
@@ -68,15 +69,13 @@ It is very convenient to select pins on ESP that are nearby (Vcc-Gnd-Scl-Sda) us
    ```
    Should show 0 up to 1° when level, increasing as you tilt the device.
 
+6. The driver also registers the `tilt` command in the Tasmota console. 
+
 ### Step 2: Auto-load on Boot
 Having the driver loaded at boot and available as a global module helps to see possible problems early and to recalibrate the device if needed. Add to `autoexec.be`:
 
 ```sh
 import level
-```
-OR even easier without leaving the Berry Console:
-```sh
-tasmota.urlfetch('https://raw.githubusercontent.com/pkarsy/tasmota-level/main/autoexec.be')
 ```
 
 **Remember: The module must be calibrated to work properly.**
@@ -84,6 +83,27 @@ tasmota.urlfetch('https://raw.githubusercontent.com/pkarsy/tasmota-level/main/au
 On boot, the driver will:
 - Scan for the accelerometer chip
 - Load saved calibration from flash
+
+## Console Command
+
+The driver exposes a single Tasmota console command:
+
+| Command | Description |
+|---------|-------------|
+| `tilt` | Returns the current tilt angle in degrees |
+
+
+Example:
+```sh
+# After calibration and reset, in Tasmota console:
+tilt
+# Response: 2.3 degrees
+```
+If one needs full access from the console there is always the 'br' command trick :
+```sh
+br level.tilt()
+br level.calibrate()
+```
 
 ## API Reference
 
@@ -113,7 +133,7 @@ if level.calibrated == false
   return nil
 end
 ```
-Now is safe to use level.tilt() and the other methods:
+Now it is safe to use level.tilt() and the other methods:
 
 ```berry
 # Get current tilt

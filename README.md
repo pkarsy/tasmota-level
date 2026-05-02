@@ -61,7 +61,11 @@ It is very convenient to select pins on ESP that are nearby (Vcc-Gnd-Scl-Sda) us
    ```sh
    level.calibrate()
    ```
-   This measures the gravity vector and saves it to flash. The .calibrate() method is only for interactive use and is performed once. If however the internal orientation of the accelerometer changes due to hardware modifications, you have to recalibrate the device.
+   This measures the gravity vector and saves it to flash. The .calibrate() method is only for interactive use and is performed once.
+
+   You have to recalibrate the device:
+   - The internal orientation of the accelerometer change.
+   - When you update/replace the "level.be" driver.
 
 5. **Test the readings**:
    ```sh

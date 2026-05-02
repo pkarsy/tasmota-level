@@ -141,14 +141,22 @@ while true
     
     # Start heater
     def start()
+      # Check if level driver is available
+      if level == nil
+        print('HEATER: Cannot start - level driver not available')
+        self.led.blink(2000, 200)
+        return
+      end
       # Check if device is tilted before starting
       var current_tilt = level.tilt()
       if current_tilt == nil
         print('HEATER: Cannot start - level sensor not calibrated')
+        self.led.blink(2000, 200)
         return
       end
       if current_tilt > self.tilt_limit
         print('HEATER: Cannot start - device is tilted (' + str(current_tilt) + '°)')
+        self.led.blink(5000, 200)
         return
       end
       tasmota.remove_timer(self)

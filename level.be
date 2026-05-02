@@ -31,7 +31,7 @@ do
     var addr = MPU6050_ADDR
     var w = tasmota.wire_scan(MPU6050_ADDR)
     if w == nil # NO device at all
-      print(MSG + 'MPU6050/9150/9250 not found at 0x' .. string.hex(MPU6050_ADDR))
+      print(MSG + 'MPU6050/9150/9250 NOT found at 0x' .. string.hex(MPU6050_ADDR))
       return nil
     end
     # WHO_AM_I register - different values for different chips
@@ -46,7 +46,7 @@ do
       print(MSG + 'The device at 0x' .. string.hex(MPU6050_ADDR) .. ' is not a supported MPU chip (WHO_AM_I=0x' .. string.hex(whoami) .. ')')
       return nil
     end
-    print(MSG + chip_name + ' found at 0x' .. string.hex(MPU6050_ADDR))
+    print(MSG + chip_name + ' FOUND at 0x' .. string.hex(MPU6050_ADDR))
     # Wake up (clear sleep bit)
     w.write_bytes(addr, 0x6B, bytes().add(0x00, 1))
     # Set accelerometer range to ±2g
@@ -93,7 +93,7 @@ do
     if w == nil
       w = tasmota.wire_scan(QMI8658_ADDR2)
       if w == nil
-        print(MSG + 'QMI8658 not found at 0x' .. string.hex(QMI8658_ADDR1) .. ' or 0x' .. string.hex(QMI8658_ADDR2))
+        print(MSG + 'QMI8658 NOT found at 0x' .. string.hex(QMI8658_ADDR1) .. ' or 0x' .. string.hex(QMI8658_ADDR2))
         return nil
       else
         addr = QMI8658_ADDR2
@@ -111,7 +111,7 @@ do
       print(MSG + 'QMI8658: Invalid WHO_AM_I value: ' + str(id[0]))
       return nil
     end
-    print(MSG + 'QMI8658 found at 0x' .. string.hex(addr))
+    print(MSG + 'QMI8658 FOUND at 0x' .. string.hex(addr))
     # --- 2. Reset the sensor (recommended) ---
     w.write_bytes(addr, QMI8658_REG_RESET, bytes().add(0xB0, 1))
     tasmota.delay(50)  # Wait for reset to complete (blocking, happens once at init)
@@ -177,7 +177,7 @@ do
     if w == nil
       w = tasmota.wire_scan(LSM6DS3_ADDR2)
       if w == nil
-        print(MSG + 'LSM6DS3 not found at 0x' .. string.hex(LSM6DS3_ADDR1) .. ' or 0x' .. string.hex(LSM6DS3_ADDR2))
+        print(MSG + 'LSM6DS3 NOT found at 0x' .. string.hex(LSM6DS3_ADDR1) .. ' or 0x' .. string.hex(LSM6DS3_ADDR2))
         return nil
       else
         addr = LSM6DS3_ADDR2
@@ -195,7 +195,7 @@ do
       print(MSG + 'LSM6DS3: Invalid WHO_AM_I: 0x' + string.hex(id[0]))
       return nil
     end
-    print(MSG + 'LSM6DS3 found at 0x' .. string.hex(addr))
+    print(MSG + 'LSM6DS3 FOUND at 0x' .. string.hex(addr))
     # Software reset
     w.write_bytes(addr, LSM6DS3_CTRL3_C, bytes().add(0x01, 1))  # SW_RESET
     tasmota.delay(10)
@@ -265,7 +265,7 @@ do
     if w == nil
       w = tasmota.wire_scan(BMI160_ADDR2)
       if w == nil
-        print(MSG + 'BMI160 not found at 0x' .. string.hex(BMI160_ADDR1) .. ' or 0x' .. string.hex(BMI160_ADDR2))
+        print(MSG + 'BMI160 NOT found at 0x' .. string.hex(BMI160_ADDR1) .. ' or 0x' .. string.hex(BMI160_ADDR2))
         return nil
       else
         addr = BMI160_ADDR2
@@ -284,7 +284,7 @@ do
       print("BMI160: Invalid CHIP_ID: 0x" + string.hex(id[0]))
       return nil
     end
-    print(MSG + 'BMI160 found at 0x' + string.hex(addr))
+    print(MSG + 'BMI160 FOUND at 0x' + string.hex(addr))
 
     # Set accelerometer to normal mode (0x11 command)
     w.write_bytes(addr, BMI160_CMD, bytes().add(0x11, 1))
@@ -352,7 +352,7 @@ do
     if w == nil
       w = tasmota.wire_scan(ADXL345_ADDR2)
       if w == nil
-        print(MSG + 'ADXL345 not found at 0x' .. string.hex(ADXL345_ADDR1) .. ' or 0x' .. string.hex(ADXL345_ADDR2))
+        print(MSG + 'ADXL345 NOT found at 0x' .. string.hex(ADXL345_ADDR1) .. ' or 0x' .. string.hex(ADXL345_ADDR2))
         return nil
       else
         addr = ADXL345_ADDR2
@@ -371,7 +371,7 @@ do
       print(MSG + 'ADXL345: Invalid DEVID: 0x' + string.hex(id[0]))
       return nil
     end
-    print(MSG + 'ADXL345 found at 0x' + string.hex(addr))
+    print(MSG + 'ADXL345 FOUND at 0x' + string.hex(addr))
 
     # Set data format: full resolution, ±2g
     # 0x08 = 0000 1000 -> FULL_RES=1, range=00 (±2g)
@@ -444,7 +444,7 @@ def mma8452_init()
     if w._request_from(addr, 1) == 1
       var whoami = w._read()
       if whoami == 0x2A
-        print('MMA8452 found at 0x' .. string.hex(addr))
+        print('MMA8452 FOUND at 0x' .. string.hex(addr))
       else
         print('MMA8452: Invalid WHO_AM_I at 0x' .. string.hex(addr) .. ': 0x' .. string.hex(whoami))
         w = nil  # Reset to try second address
@@ -458,7 +458,7 @@ def mma8452_init()
   if w == nil
     w = tasmota.wire_scan(MMA8452_ADDR2)
     if w == nil
-      print('MMA8452 not found at 0x' .. string.hex(MMA8452_ADDR1) .. ' or 0x' .. string.hex(MMA8452_ADDR2))
+      print('MMA8452 NOT found at 0x' .. string.hex(MMA8452_ADDR1) .. ' or 0x' .. string.hex(MMA8452_ADDR2))
       return nil
     end
     
@@ -472,7 +472,7 @@ def mma8452_init()
       print('MMA8452: Invalid WHO_AM_I at 0x' .. string.hex(addr))
       return nil
     end
-    print('MMA8452 found at 0x' .. string.hex(addr))
+    print('MMA8452 FOUND at 0x' .. string.hex(addr))
   end
   
   # Configure chip (must be in Standby to change settings)
@@ -551,7 +551,7 @@ end
     var tilt_callback
     var tilt_max_angle # in degrees
     var interval # Interval for tilt monitor in ms
-    static PERSIST_KEY = 'calibration'
+    static PERSIST_KEY = 'level_calibration'
 
     def init(addr,w, read_accel)
       # wire: tasmota wire_scan result (already validated)

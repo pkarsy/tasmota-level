@@ -1,6 +1,6 @@
 # Tasmota-Level
 
-A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU/accelerometer (QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452 - more can be added easily).
+A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU/accelerometer (QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452, LIS3DH, LIS3DSH - more can be added easily).
 
 ## Overview
 
@@ -14,7 +14,9 @@ This driver is primarily designed to be used by other Berry programs that need t
 ## Hardware Requirements
 
 - ESP32-based module running Tasmota
-- QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, or MMA8452 I2C accelerometer/gyroscope sensor. Only the accelerometer is used (so no gyro, DMP or interrupts).
+- QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452, LIS3DH, or LIS3DSH I2C accelerometer/gyroscope sensor. Only the accelerometer is used (so no gyro, DMP or interrupts).
+
+> **Note:** LIS3DSH has been tested and confirmed working. LIS3DH support is implemented but not yet tested on hardware — open an issue if you run into problems.
 - An enclosure or device where the ESP32 and the sensor are mounted. For example a heater(see below) or a fan.
 
 ## Warning for fake parts
@@ -51,7 +53,7 @@ It is very convenient to select pins on ESP that are nearby (Vcc-Gnd-Scl-Sda) us
    ```
    If no IMU is found, you'll see:
    ```
-   LEVEL: No supported IMU module found. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452
+   LEVEL: No supported IMU module found. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452, LIS3DH, LIS3DSH
    ```
 
 3. **Place your device in the "level" position** (the orientation you want to define as horizontal)
@@ -125,7 +127,7 @@ br level.calibrate()
 ### Example Usage
 
 
-**⚠️ IMPORTANT:** If no supported IMU is detected, `level` will be `nil`. Even then there is the possibility that it is not calibrated. Any code using the level driver **MUST** check these two conditions before use:
+**⚠️ IMPORTANT:** If no supported IMU is detected, `level` will be `nil`. Even then, there is the possibility that it is not calibrated. Any code using the level driver **MUST** check these two conditions before use:
 ```berry
 import level
 if level == nil
@@ -162,11 +164,7 @@ See `heater/` for a complete working example that uses this driver for heater sa
 - Stops the heater/prevents starting if tilted >10°
 - 1-hour auto-timeout
 - on/off pushbutton
-- Please follow the safety caveats included in the heater README
 
-## Contributing
-
-This is a hobbyist project. Contributions welcome! Please test thoroughly and report issues.
 
 ## Tips
 - Inside the box, make the USB port accessible (for easier recovery)

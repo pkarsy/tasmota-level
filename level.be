@@ -536,6 +536,137 @@ def mma8452_read_accel(addr, w)
   ]
 end
 
+###############################################################################
+# LIS3DH support
+###############################################################################
+
+# Initialize LIS3DH
+# Returns: [addr, wire] or nil on failure
+def lis3dh_init()
+  var LIS3DH_ADDR1 = 0x18  # SDO low
+  var LIS3DH_ADDR2 = 0x19  # SDO high
+  var LIS3DH_WHO_AM_I = 0x0F     # Should return 0x33
+  var LIS3DH_CTRL_REG1 = 0x20    # ODR, LPen, axes enable
+  var LIS3DH_CTRL_REG4 = 0x23    # BDU, FS, HR
+
+  var addr = 0
+  var w = tasmota.wire_scan(LIS3DH_ADDR1)
+  if w == nil
+    w = tasmota.wire_scan(LIS3DH_ADDR2)
+    if w == nil
+      print(MSG + 'LIS3DH NOT found at 0x' .. string.hex(LIS3DH_ADDR1) .. ' or 0x' .. string.hex(LIS3DH_ADDR2))
+      return nil
+    else
+      addr = LIS3DH_ADDR2
+    end
+  else
+    addr = LIS3DH_ADDR1
+  end
+
+  # Check WHO_AM_I
+  var id = w.read_bytes(addr, LIS3DH_WHO_AM_I, 1)
+  if id == nil || id.size() == 0
+    print(MSG + 'LIS3DH: Failed to read WHO_AM_I')
+    return nil
+  end
+  if id[0] != 0x33
+    print(MSG + 'LIS3DH: Invalid WHO_AM_I: 0x' + string.hex(id[0]))
+    return nil
+  end
+  print(MSG + 'LIS3DH FOUND at 0x' .. string.hex(addr))
+
+  # CTRL_REG1: 100Hz (0x5), normal mode, all axes enabled
+  # 0x57 = 0101 0111
+  w.write_bytes(addr, LIS3DH_CTRL_REG1, bytes().add(0x57, 1))
+  tasmota.delay(10)
+
+  # CTRL_REG4: BDU=1, ±2g (FS=00), High-Resolution mode (HR=1)
+  # 0x88 = 1000 1000
+  w.write_bytes(addr, LIS3DH_CTRL_REG4, bytes().add(0x88, 1))
+  tasmota.delay(10)
+
+  print(MSG + 'LIS3DH configured (100Hz, ±2g, high-res)')
+  return [addr, w]
+end
+
+# Read accelerometer from LIS3DH
+# Returns: [ax, ay, az] in g units or nil on failure
+def lis3dh_read_accel(addr, w)
+  var LIS3DH_OUT_X_L = 0x28   # X-axis low byte
+  var d = w.read_bytes(addr, LIS3DH_OUT_X_L, 6)
+  if d == nil || size(d) != 6
+    print("LIS3DH: Failed to read accelerometer data")
+    return nil
+  end
+
+  # Little-endian signed 16-bit conversion
+  def to_i16(l, h)
+    var v = (h << 8) | l
+    if v > 32767 v -= 65536 end
+    return v
+  end
+
+  # Scale for ±2g high-res mode: 16384 LSB/g
+  var scale = 16384.0
+  return [
+    to_i16(d[0], d[1]) / scale,
+    to_i16(d[2], d[3]) / scale,
+    to_i16(d[4], d[5]) / scale
+  ]
+end
+
+###############################################################################
+# LIS3DSH support
+###############################################################################
+
+# Initialize LIS3DSH
+# Returns: [addr, wire] or nil on failure
+def lis3dsh_init()
+  var LIS3DSH_ADDR1 = 0x1E  # SDO low
+  var LIS3DSH_ADDR2 = 0x1D  # SDO high
+  var LIS3DSH_WHO_AM_I = 0x0F     # Should return 0x3F
+  var LIS3DSH_CTRL_REG4 = 0x20    # ODR, BDU, axes enable
+  var LIS3DSH_CTRL_REG5 = 0x24    # BW, FS
+
+  var addr = 0
+  var w = tasmota.wire_scan(LIS3DSH_ADDR1)
+  if w == nil
+    w = tasmota.wire_scan(LIS3DSH_ADDR2)
+    if w == nil
+      print(MSG + 'LIS3DSH NOT found at 0x' .. string.hex(LIS3DSH_ADDR1) .. ' or 0x' .. string.hex(LIS3DSH_ADDR2))
+      return nil
+    else
+      addr = LIS3DSH_ADDR2
+    end
+  else
+    addr = LIS3DSH_ADDR1
+  end
+
+  # Check WHO_AM_I
+  var id = w.read_bytes(addr, LIS3DSH_WHO_AM_I, 1)
+  if id == nil || id.size() == 0
+    print(MSG + 'LIS3DSH: Failed to read WHO_AM_I')
+    return nil
+  end
+  if id[0] != 0x3F
+    print(MSG + 'LIS3DSH: Invalid WHO_AM_I: 0x' + string.hex(id[0]))
+    return nil
+  end
+  print(MSG + 'LIS3DSH FOUND at 0x' .. string.hex(addr))
+
+  # CTRL_REG4: ODR=100Hz (0110), BDU=1, all axes enabled
+  # 0x6F = 0110 1111
+  w.write_bytes(addr, LIS3DSH_CTRL_REG4, bytes().add(0x6F, 1))
+  tasmota.delay(10)
+
+  # CTRL_REG5: ±2g (FS=000), BW=50Hz (11)
+  # 0xC0 = 1100 0000
+  w.write_bytes(addr, LIS3DSH_CTRL_REG5, bytes().add(0xC0, 1))
+  tasmota.delay(10)
+
+  print(MSG + 'LIS3DSH configured (100Hz, ±2g, 50Hz BW)')
+  return [addr, w]
+end
 
   class LEVEL
     #
@@ -788,7 +919,17 @@ end
       level = LEVEL(imu[0], imu[1],mma8452_read_accel)
       return level
     end
-    print(MSG + 'No IMU detected. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452')
+    imu = lis3dh_init()
+    if imu != nil
+      level = LEVEL(imu[0], imu[1], lis3dh_read_accel)
+      return level
+    end
+    imu = lis3dsh_init()
+    if imu != nil
+      level = LEVEL(imu[0], imu[1], lis3dh_read_accel)
+      return level
+    end
+    print(MSG + 'No IMU detected. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452, LIS3DH, LIS3DSH')
     return nil
   end
 

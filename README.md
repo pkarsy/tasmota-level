@@ -212,6 +212,16 @@ If a device appears at one of the expected addresses (see table below), the wiri
 
 If the driver loads but shows `No saved calibration found`, this is normal for first use. Run `level.calibrate()` with the device held in the orientation you want to define as level.
 
+**4. Completely wrong tilt values**
+
+If `level.tilt()` returns large or nonsensical angles (e.g. 90° when the device is sitting level), the calibration no longer matches the physical orientation. This can happen if:
+
+- The **internal mounting** of the sensor shifted inside the enclosure (vibration, loose screw, etc.)
+- The **sensor module was replaced** with a different one (even the same chip model can have a slightly different orientation on the breakout board)
+- The **device's orientation changed** (relocated to a different surface, wall-mounted instead of desk-mounted, etc.)
+
+**Fix:** Run `level.calibrate()` again with the device in the desired level position. No need to re-flash or re-download the driver.
+
 ## Tips
 - Inside the box, make the USB port accessible (for easier recovery)
 - Ensure the IMU module is firmly fixed inside the enclosure to maintain calibration

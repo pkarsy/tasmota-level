@@ -166,6 +166,52 @@ See `heater/` for a complete working example that uses this driver for heater sa
 - on/off pushbutton
 
 
+## Troubleshooting
+
+### No IMU detected
+
+If `import level` reports that no supported IMU is found, the first step is to check whether the sensor is visible on the I2C bus at all.
+
+**1. Scan the I2C bus**
+
+Paste the following script into the Berry Console (Tasmota Web UI → Tools → Berry Console):
+
+```berry
+import string
+
+print("\nScanning I2C bus...")
+for addr: 0x03 .. 0x77
+  if tasmota.wire_scan(addr)
+    print("Found at " + string.format("0x%02X", addr))
+  end
+end
+print("Scan done.")
+```
+
+If a device appears at one of the expected addresses (see table below), the wiring is correct but the driver may not be identifying the chip correctly — open a GitHub issue.
+
+| Chip | Expected address(es) |
+|------|---------------------|
+| QMI8658 | 0x6A, 0x6B |
+| MPU6050/9150/9250 | 0x68, 0x69 |
+| LSM6DS3 | 0x6A, 0x6B |
+| ADXL345 | 0x53, 0x1D |
+| BMI160 | 0x68, 0x69 |
+| MMA8452 | 0x1C, 0x1D |
+| LIS3DH | 0x18, 0x19 |
+| LIS3DSH | 0x1E, 0x1D |
+
+**2. No I2C device found at all**
+
+- Confirm the IMU is powered (VCC to 3.3V, GND to GND).
+- Verify that **I2C pins are configured in Tasmota**: Web UI → Configuration → Module → assign **I2C SCL** and **I2C SDA** to the physical GPIOs you wired.
+- Check the wiring: SCL → SCL, SDA → SDA. Swapping them or connecting to the wrong GPIOs will produce nothing.
+- Try a slower bus speed if the sensor has pull-up resistors that are too weak for the default speed.
+
+**3. No calibration saved**
+
+If the driver loads but shows `No saved calibration found`, this is normal for first use. Run `level.calibrate()` with the device held in the orientation you want to define as level.
+
 ## Tips
 - Inside the box, make the USB port accessible (for easier recovery)
 - Ensure the IMU module is firmly fixed inside the enclosure to maintain calibration

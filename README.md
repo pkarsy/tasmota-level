@@ -7,7 +7,7 @@ A self-leveling/bubble level driver for Tasmota using Berry scripting and an IMU
 This driver is primarily designed to be used by other Berry programs that need tilt sensing capabilities. It provides a simple API for reading tilt angles and monitoring tilt events.
 
 - **Much easier hardware installation than bubble tilt sensors**: Mount the module in any orientation that is most convenient. When the hardware is ready, wirelessly calibrate the module.
-- **More precise, and configurable tilt trigger** Depending on application you may want 10deg trigger for example or any other value. Most IMU chips can do better than 1deg accuracy.
+- **More precise and configurable tilt trigger** Depending on the application you may want a 10° trigger for example, or any other value. Most IMU chips can do better than 1deg accuracy.
 - **No recompilation required**: Install and configure without rebuilding Tasmota firmware. This is important as the support for MPU6050 and other IMUs exists but is not currently compiled in stock Tasmota builds.
 - **Survives firmware updates**: Berry scripts persist across Tasmota updates
 
@@ -16,10 +16,10 @@ This driver is primarily designed to be used by other Berry programs that need t
 - ESP32-based module running Tasmota
 - QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452, LIS3DH, or LIS3DSH I2C accelerometer/gyroscope sensor. Only the accelerometer is used (so no gyro, DMP or interrupts).
 
-- An enclosure or device where the ESP32 and the sensor are mounted. For example a heater(see below) or a fan.
+- An enclosure or device where the ESP32 and the sensor are mounted, for example a heater (see below) or a fan.
 
 ## Warning for fake parts
-MPU6050 is EOL (for a long time) and most breakout boards on online stores have fake or recycled MPU6050 parts. The other parts can have similar problems (to a lesser degree, however), so purchasing through authorized distributors is a good strategy. The only part one can somewhat trust (no guarantees!) on Aliexpress/Ebay is QMI8658 because the original part is modern and of very low cost, so the incentive of making LOWER cost fakes, is minimal (faking costs too!). To be fair, I have purchased a lot of parts from Aliexpress (all the above brands), and seem to work perfectly OK, at least the accelerometer this driver uses.
+MPU6050 is EOL (for a long time) and most breakout boards on online stores have fake or recycled MPU6050 parts. The other parts can have similar problems (to a lesser degree, however), so purchasing through authorized distributors is a good strategy. The only part one can somewhat trust (no guarantees!) on Aliexpress/Ebay is QMI8658 because the original part is modern and of very low cost, so the incentive of making LOWER cost fakes, is minimal (faking costs too!). To be fair, I have purchased a lot of parts from Aliexpress (all the above brands), and they seem to work perfectly OK, at least the accelerometer this driver uses.
 
 ## Wiring
 
@@ -65,7 +65,7 @@ It is very convenient to select pins on ESP that are nearby (Vcc-Gnd-Scl-Sda) us
    This measures the gravity vector and saves it to flash. The .calibrate() method is only for interactive use and is performed once.
 
    You have to recalibrate the device:
-   - The internal orientation of the accelerometer change.
+   - The internal orientation of the accelerometer changes.
    - When you update/replace the "level.be" driver.
 
 5. **Test the readings**:
@@ -104,7 +104,7 @@ Example:
 tilt
 # Response: 2.3 degrees
 ```
-If one needs full access from the console there is always the 'br' command trick :
+If one needs full access from the console there is always the 'br' command trick:
 ```sh
 br level.tilt()
 br level.calibrate()
@@ -154,7 +154,7 @@ level.tilt_monitor(/->my.method())
 level.tilt_monitor(/->my.method(), 100, 15)  # custom interval (100ms) and max_tilt (15°)
 ```
 
-## Heater tilt aware Controller
+## Heater tilt-aware Controller
 
 > **⚠️ WARNING:** Use of the Heater tilt aware Controller is at your own risk. See [LICENSE](LICENSE) for full disclaimer. The developer assumes no liability for any damages or injuries.
 
@@ -202,10 +202,9 @@ If a device appears at one of the expected addresses (see table below), the wiri
 
 **2. No I2C device found at all**
 
-- Confirm the IMU is powered (VCC to 3.3V, GND to GND).
+- Confirm the IMU is powered (VCC to 3.3V, GND to GND). The same for the accelerometer.
 - Verify that **I2C pins are configured in Tasmota**: Web UI → Configuration → Module → assign **I2C SCL** and **I2C SDA** to the physical GPIOs you wired.
-- Check the wiring: SCL → SCL, SDA → SDA. Swapping them or connecting to the wrong GPIOs will produce nothing.
-- Try a slower bus speed if the sensor has pull-up resistors that are too weak for the default speed.
+- Check the wiring: SCL → SCL, SDA → SDA. Swapping them or connecting to the wrong GPIOs is instant failure, of course.
 
 **3. No calibration saved**
 

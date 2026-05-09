@@ -592,7 +592,10 @@ end
 # Read accelerometer from LIS3DH
 # Returns: [ax, ay, az] in g units or nil on failure
 def lis3dh_read_accel(addr, w)
-  var LIS3DH_OUT_X_L = 0x28   # X-axis low byte
+  # LIS3DH requires MSB set on register address for multi-byte reads
+  # 0x28 | 0x80 = 0xA8 enables auto-increment, otherwise all 6 bytes
+  # come from the same register producing identical X/Y/Z values.
+  var LIS3DH_OUT_X_L = 0xA8   # 0x28 | 0x80, auto-increment for 6-byte read
   var d = w.read_bytes(addr, LIS3DH_OUT_X_L, 6)
   if d == nil || size(d) != 6
     print("LIS3DH: Failed to read accelerometer data")
@@ -666,6 +669,33 @@ def lis3dsh_init()
 
   print(MSG + 'LIS3DSH configured (100Hz, ±2g, 50Hz BW)')
   return [addr, w]
+end
+
+# Read accelerometer from LIS3DSH
+# Returns: [ax, ay, az] in g units or nil on failure
+def lis3dsh_read_accel(addr, w)
+  # LIS3DSH auto-increments on multi-byte reads without needing the MSB set
+  var LIS3DSH_OUT_X_L = 0x28   # X-axis low byte
+  var d = w.read_bytes(addr, LIS3DSH_OUT_X_L, 6)
+  if d == nil || size(d) != 6
+    print("LIS3DSH: Failed to read accelerometer data")
+    return nil
+  end
+
+  # Little-endian signed 16-bit conversion
+  def to_i16(l, h)
+    var v = (h << 8) | l
+    if v > 32767 v -= 65536 end
+    return v
+  end
+
+  # Scale for ±2g: 16384 LSB/g
+  var scale = 16384.0
+  return [
+    to_i16(d[0], d[1]) / scale,
+    to_i16(d[2], d[3]) / scale,
+    to_i16(d[4], d[5]) / scale
+  ]
 end
 
   class LEVEL
@@ -926,7 +956,7 @@ end
     end
     imu = lis3dsh_init()
     if imu != nil
-      level = LEVEL(imu[0], imu[1], lis3dh_read_accel)
+      level = LEVEL(imu[0], imu[1], lis3dsh_read_accel)
       return level
     end
     print(MSG + 'No IMU detected. Supported: QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452, LIS3DH, LIS3DSH')

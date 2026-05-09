@@ -16,7 +16,6 @@ This driver is primarily designed to be used by other Berry programs that need t
 - ESP32-based module running Tasmota
 - QMI8658, MPU6050/9150/9250, LSM6DS3, ADXL345, BMI160, MMA8452, LIS3DH, or LIS3DSH I2C accelerometer/gyroscope sensor. Only the accelerometer is used (so no gyro, DMP or interrupts).
 
-> **Note:** LIS3DSH has been tested and confirmed working. LIS3DH support is implemented but not yet tested on hardware — open an issue if you run into problems.
 - An enclosure or device where the ESP32 and the sensor are mounted. For example a heater(see below) or a fan.
 
 ## Warning for fake parts
